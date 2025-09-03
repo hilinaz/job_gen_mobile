@@ -1,16 +1,20 @@
 import '../../domain/entities/tokens.dart';
 
 class TokensModel extends Tokens {
-  const TokensModel({required super.accessToken, required super.refreshToken});
+  const TokensModel({
+    required super.accessToken,
+    required super.refreshToken,
+  });
 
-  factory TokensModel.fromJson(Map<String, dynamic> j) =>
-      TokensModel(
-        accessToken: j['access_token'] as String,
-        refreshToken: j['refresh_token'] as String,
-      );
+  factory TokensModel.fromJson(Map<String, dynamic> json) {
+    return TokensModel(
+      accessToken: json['access_token'] as String,
+      refreshToken: json['refresh_token'] as String,
+    );
+  }
 
   Map<String, dynamic> toJson() => {
-    'access_token': accessToken,
-    'refresh_token': refreshToken,
-  };
+        'access_token': accessToken,
+        'refresh_token': refreshToken,
+      };
 }
