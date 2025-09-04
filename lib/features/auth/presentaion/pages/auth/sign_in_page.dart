@@ -9,6 +9,11 @@ class SignInPage extends StatefulWidget {
 }
 
 class _SignInPageState extends State<SignInPage> {
+
+  final _emailController = TextEditingController();
+
+  final _passwordController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -107,11 +112,12 @@ class _SignInPageState extends State<SignInPage> {
                         ],
                       ),
                       const SizedBox(height: 32),
-                      buildInputField('Email Address', 'Enter your email'),
+                      buildInputField('Email Address', 'Enter your email',_emailController),
                       const SizedBox(height: 16),
                       buildInputField(
                         'Password',
                         'Enter your password',
+                        _passwordController,
                         isPassword: true,
                       ),
                       const SizedBox(height: 8),

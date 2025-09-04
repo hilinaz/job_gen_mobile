@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 
-Widget buildInputField(String label, String hint, {bool isPassword = false}) {
+Widget buildInputField(
+  String label,
+  String hint, 
+  TextEditingController controller, {
+  bool isPassword = false,
+  
+}) {
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
@@ -14,14 +20,17 @@ Widget buildInputField(String label, String hint, {bool isPassword = false}) {
       ),
       const SizedBox(height: 8),
       TextField(
+        controller: controller,
         obscureText: isPassword,
         style: const TextStyle(fontSize: 16, color: Colors.black87),
         decoration: InputDecoration(
-
           hintText: hint,
-          hintStyle: TextStyle(color: const Color.fromARGB(255, 167, 167, 167), fontSize: 14),
+          hintStyle: const TextStyle(
+            color: Color.fromARGB(255, 167, 167, 167),
+            fontSize: 14,
+          ),
           filled: true,
-          fillColor: const Color.fromARGB(255, 240, 244, 244),
+          fillColor: Color.fromARGB(255, 240, 244, 244),
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 20.0,
             vertical: 18.0,

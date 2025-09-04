@@ -9,6 +9,9 @@ class ResetPasswordPage extends StatefulWidget {
 }
 
 class _ResetPasswordPageState extends State<ResetPasswordPage> {
+ 
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -71,12 +74,14 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                       buildInputField(
                         'New Password',
                         'Enter your new password',
+                        _passwordController,
                         isPassword: true,
                       ),
                       const SizedBox(height: 16),
                       buildInputField(
                         'Confirm Password',
                         'Confirm your new password',
+                        _confirmPasswordController,
                         isPassword: true,
                       ),
                       const SizedBox(height: 32),

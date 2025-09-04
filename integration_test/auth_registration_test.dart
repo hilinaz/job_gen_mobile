@@ -8,7 +8,7 @@ void main() {
   late AuthRepositoryImpl repo;
 
   setUp(() {
-    dio = Dio(BaseOptions(baseUrl: "http://localhost:8080/api/v1"));
+    dio = Dio(BaseOptions(baseUrl: "http://10.203.212.168:8080/api/v1"));
     final ds = AuthRemoteDataSourceImpl(dio);
     repo = AuthRepositoryImpl(ds);
   });

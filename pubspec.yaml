@@ -37,6 +37,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   dio: ^5.9.0
   shared_preferences: ^2.2.3
+  get_it: ^7.6.0 
   integration_test:
     sdk: flutter
 

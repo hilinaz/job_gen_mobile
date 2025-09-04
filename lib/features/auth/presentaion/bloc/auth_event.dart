@@ -34,7 +34,10 @@ class VerifyEmailEvent extends AuthEvent {
   VerifyEmailEvent({required this.email, required this.otp});
 }
 
-class ResendOtpEvent extends AuthEvent {}
+class ResendOtpEvent extends AuthEvent {
+  final String email;
+  ResendOtpEvent({required this.email});
+}
 
 class ForgotPasswordEvent extends AuthEvent {
   final String email;
