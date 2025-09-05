@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:job_gen_mobile/features/auth/presentaion/bloc/auth_bloc.dart';
-import '../../widget/widget.dart'; // Make sure buildInputField is imported
+import '../../widget/widget.dart';
 
-class ResetPasswordPage extends StatefulWidget {
-  const ResetPasswordPage({super.key});
+class ChangePasswordPage extends StatefulWidget {
+  const ChangePasswordPage({super.key});
 
   @override
-  State<ResetPasswordPage> createState() => _ResetPasswordPageState();
+  State<ChangePasswordPage> createState() => _ChangePasswordPageState();
 }
 
-class _ResetPasswordPageState extends State<ResetPasswordPage> {
-  final _passwordController = TextEditingController();
-  final _otpController = TextEditingController();
+class _ChangePasswordPageState extends State<ChangePasswordPage> {
+  final _oldPasswordController = TextEditingController();
+  final _newPasswordController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -34,16 +35,16 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
           child: IconButton(
             icon: const Icon(Icons.arrow_back_ios, size: 24),
             onPressed: () {
-              Navigator.pop(context); // Go back
+              Navigator.pop(context);
             },
           ),
         ),
       ),
       body: SafeArea(
-        child: BlocListener<AuthBloc,AuthState>(
-          listener: (context,state){
-             if (state is AuthLoadingState) {
-              // Show loading dialog
+        child: BlocListener<AuthBloc, AuthState>(
+          listener: (context, state) {
+            if (state is AuthLoadingState) {
+          
               showDialog(
                 context: context,
                 barrierDismissible: false,
@@ -60,11 +61,13 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
               ScaffoldMessenger.of(
                 context,
               ).showSnackBar(SnackBar(content: Text(state.message)));
-            } else if (state is PasswordResetState) {
+            } else if (state is PasswordChangedState) {
+              _oldPasswordController.clear();
+              _newPasswordController.clear();
               ScaffoldMessenger.of(
                 context,
               ).showSnackBar(SnackBar(content: Text(state.message)));
-              Navigator.pop(context);
+              Navigator.pop(context); 
             }
           },
           child: LayoutBuilder(
@@ -82,7 +85,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                       children: [
                         const SizedBox(height: 32),
                         const Text(
-                          'Reset Password',
+                          'Change Password',
                           style: TextStyle(
                             fontSize: 28,
                             fontWeight: FontWeight.bold,
@@ -91,7 +94,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                         ),
                         const SizedBox(height: 8),
                         const Text(
-                          'Enter your new password below to reset your account password',
+                          'Enter your old password and set a new one below',
                           style: TextStyle(
                             fontSize: 16,
                             color: Color.fromARGB(255, 75, 75, 75),
@@ -100,15 +103,16 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                         ),
                         const SizedBox(height: 32),
                         buildInputField(
-                          'Verification Code',
-                          'Enter Verification code',
-                          _passwordController,
+                          'Old Password',
+                          'Enter your old password',
+                          _oldPasswordController,
+                          isPassword: true,
                         ),
                         const SizedBox(height: 16),
                         buildInputField(
                           'New Password',
                           'Enter your new password',
-                          _otpController,
+                          _newPasswordController,
                           isPassword: true,
                         ),
                         const SizedBox(height: 32),
@@ -117,9 +121,11 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                           child: ElevatedButton(
                             onPressed: () {
                               context.read<AuthBloc>().add(
-                                ResetPasswordEvent(
-                                  newPassword: _passwordController.text.trim(),
-                                  token: _otpController.text.trim(),
+                                ChangePasswordEvent(
+                                  oldPassword: _oldPasswordController.text
+                                      .trim(),
+                                  newPassword: _newPasswordController.text
+                                      .trim(),
                                 ),
                               );
                             },
@@ -130,33 +136,13 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                               ),
                             ),
                             child: const Text(
-                              'Reset Password',
-                              style: TextStyle(fontSize: 18, color: Colors.white),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Text(
-                              'Remembered your password? ',
-                              style: TextStyle(fontSize: 14),
-                            ),
-                            TextButton(
-                              onPressed: () {
-                                Navigator.pop(context); // Go back to Sign In page
-                              },
-                              child: const Text(
-                                'Sign In',
-                                style: TextStyle(
-                                  color: Color(0xFF6BBAA5),
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                ),
+                              'Update Password',
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: Colors.white,
                               ),
                             ),
-                          ],
+                          ),
                         ),
                         const SizedBox(height: 16),
                       ],

@@ -65,6 +65,18 @@ class _SignUpPageState extends State<SignUpPage> {
       body: SafeArea(
         child: BlocListener<AuthBloc, AuthState>(
           listener: (context, state) {
+             if (state is AuthLoadingState) {
+              // Show loading dialog
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (_) =>
+                    const Center(child: CircularProgressIndicator()),
+              );
+            } else {
+              Navigator.of(context, rootNavigator: true).maybePop();
+            }
+
           if (state is AuthFailureState) {
     Navigator.of(context, rootNavigator: true).pop();
 
@@ -211,7 +223,7 @@ class _SignUpPageState extends State<SignUpPage> {
                             ),
                             TextButton(
                               onPressed: () {
-                                Navigator.pushNamed(context, '/verify_email');
+                                Navigator.pushNamed(context, '/sign_in');
                               },
                               child: const Text(
                                 'Sign In',

@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:job_gen_mobile/features/auth/presentaion/bloc/auth_bloc.dart';
 import 'package:job_gen_mobile/features/auth/presentaion/pages/auth/forgot_password.dart';
 import 'package:job_gen_mobile/features/auth/presentaion/pages/auth/verify_email.dart';
+
 import 'package:job_gen_mobile/features/auth/presentaion/pages/landing/on_boarding_screen.dart';
 import 'package:job_gen_mobile/features/auth/presentaion/pages/landing/splash_screen.dart';
 import 'package:job_gen_mobile/features/auth/presentaion/pages/auth/reset_password_page.dart';
@@ -46,6 +47,7 @@ class MyApp extends StatelessWidget {
 
           '/forgot_password': (_) => ForgotPasswordPage(),
           '/reset_password': (_) => ResetPasswordPage(),
+         
         },
       ),
     );

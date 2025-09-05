@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:job_gen_mobile/features/auth/presentaion/bloc/auth_bloc.dart';
 import '../../widget/widget.dart'; // Make sure buildInputField and buildSocialButton are imported
 
 class ForgotPasswordPage extends StatefulWidget {
@@ -9,9 +11,8 @@ class ForgotPasswordPage extends StatefulWidget {
 }
 
 class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
-
   final _emailController = TextEditingController();
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -39,88 +40,127 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         ),
       ),
       body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            return SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 24.0,
-                vertical: 20.0,
-              ),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                child: IntrinsicHeight(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const SizedBox(height: 32),
-                      const Text(
-                        'Forgot Password',
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Enter your email address below to reset your password',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Color.fromARGB(255, 75, 75, 75),
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 32),
-                      buildInputField('Email Address', 'Enter your email',_emailController),
-                      const SizedBox(height: 32),
-                      SizedBox(
-                        height: 50,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            Navigator.pushNamed(context, '/reset_password');
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF6BBAA5),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8.0),
-                            ),
+        child: BlocListener<AuthBloc, AuthState>(
+          listener: (context, state) {
+            if (state is AuthLoadingState) {
+              // Show loading dialog
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (_) =>
+                    const Center(child: CircularProgressIndicator()),
+              );
+            } else {
+              Navigator.of(context, rootNavigator: true).maybePop();
+            }
+
+            if (state is AuthFailureState) {
+              Navigator.of(context, rootNavigator: true).pop();
+
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(state.message)));
+            } else if (state is ResetLinkSentState) {
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(state.message)));
+              Navigator.pop(context);
+            }
+          },
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24.0,
+                  vertical: 20.0,
+                ),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: IntrinsicHeight(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const SizedBox(height: 32),
+                        const Text(
+                          'Forgot Password',
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
                           ),
-                          child: const Text(
-                            'Send Reset Link',
-                            style: TextStyle(fontSize: 18, color: Colors.white),
-                          ),
+                          textAlign: TextAlign.center,
                         ),
-                      ),
-                      const SizedBox(height: 24),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text(
-                            'Remembered your password? ',
-                            style: TextStyle(fontSize: 14),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Enter your email address below to reset your password',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Color.fromARGB(255, 75, 75, 75),
                           ),
-                          TextButton(
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 32),
+                        buildInputField(
+                          'Email Address',
+                          'Enter your email',
+                          _emailController,
+                        ),
+                        const SizedBox(height: 32),
+                        SizedBox(
+                          height: 50,
+                          child: ElevatedButton(
                             onPressed: () {
-                              Navigator.pop(context); // Go back to Sign In page
+                              context.read<AuthBloc>().add(
+                                ForgotPasswordEvent(
+                                  email: _emailController.text.trim(),
+                                ),
+                              );
                             },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF6BBAA5),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8.0),
+                              ),
+                            ),
                             child: const Text(
-                              'Sign In',
+                              'Send Reset Link',
                               style: TextStyle(
-                                color: Color(0xFF6BBAA5),
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
+                                fontSize: 18,
+                                color: Colors.white,
                               ),
                             ),
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                    ],
+                        ),
+                        const SizedBox(height: 24),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Text(
+                              'Remembered your password? ',
+                              style: TextStyle(fontSize: 14),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                              },
+                              child: const Text(
+                                'Sign In',
+                                style: TextStyle(
+                                  color: Color(0xFF6BBAA5),
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            );
-          },
+              );
+            },
+          ),
         ),
       ),
     );

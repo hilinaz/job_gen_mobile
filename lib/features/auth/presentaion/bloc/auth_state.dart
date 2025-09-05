@@ -30,7 +30,17 @@ class ResentOtpState extends AuthState {
   ResentOtpState({required this.message});
 }
 
-class verifiedEmailState extends AuthState {}
+class VerifiedEmailState extends AuthState {
+  final String message;
+  VerifiedEmailState({required this.message});
+}
+
+class ResetLinkSentState extends AuthState {
+  final String message;
+  ResetLinkSentState({
+    required this.message
+  });
+}
 
 class PasswordResetState extends AuthState {
   final String message;
@@ -48,10 +58,7 @@ class ErorrState extends AuthState {
 }
 
 class AuthFailureState extends AuthState {
-  final Failure failure;
+  final String message;
 
-  AuthFailureState(this.failure);
-
-  String get message => failure.message;
-  String? get code => failure.code;
+  AuthFailureState({required this.message});
 }

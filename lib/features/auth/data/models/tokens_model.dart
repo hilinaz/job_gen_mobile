@@ -9,9 +9,10 @@ class TokensModel extends Tokens {
   factory TokensModel.fromJson(Map<String, dynamic> json) {
     return TokensModel(
       accessToken: json['access_token'] as String,
-      refreshToken: json['refresh_token'] as String,
+      refreshToken: json['refresh_token'] as String? ?? '',
     );
   }
+
 
   Map<String, dynamic> toJson() => {
         'access_token': accessToken,

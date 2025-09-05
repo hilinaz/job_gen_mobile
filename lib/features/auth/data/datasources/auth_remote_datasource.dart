@@ -98,9 +98,6 @@ Future<void> register(Map<String, dynamic> body) async {
         ),
       );
 
-      print('Resend OTP Request Body: ${{'email': email}}');
-      print('Status code: ${r.statusCode}');
-      print('Response data: ${r.data}');
 
       if (r.statusCode == 200) {
         final env = ApiEnvelope.fromJson(

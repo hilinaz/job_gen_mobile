@@ -42,36 +42,39 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
       ),
       body: SafeArea(
         child: BlocListener<AuthBloc, AuthState>(
-          listener: (context,state){
-           if (state is AuthLoadingState) {
-      // Show loading dialog
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (_) => const Center(child: CircularProgressIndicator()),
-      );
-    } else {
-      // Dismiss loading on success or failure
-      Navigator.of(context, rootNavigator: true).maybePop();
-    }
+          listener: (context, state) {
+            if (state is AuthLoadingState) {
+              // Show loading dialog
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (_) =>
+                    const Center(child: CircularProgressIndicator()),
+              );
+            } else {
+              Navigator.of(context, rootNavigator: true).maybePop();
+            }
 
-
-              if (state is AuthFailureState) {
+            if (state is AuthFailureState) {
               Navigator.of(context, rootNavigator: true).pop();
 
               ScaffoldMessenger.of(
                 context,
               ).showSnackBar(SnackBar(content: Text(state.message)));
             }
-            else if (state is ResentOtpState){
-            
-            _otpController.clear();
+            if (state is VerifiedEmailState) {
+              _emailController.clear();
+              _otpController.clear();
               ScaffoldMessenger.of(
                 context,
               ).showSnackBar(SnackBar(content: Text(state.message)));
-
+              Navigator.pushNamed(context, '/sign_in');
+            } else if (state is ResentOtpState) {
+              _otpController.clear();
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(state.message)));
             }
-            
           },
           child: LayoutBuilder(
             builder: (context, constraints) {
@@ -122,7 +125,14 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
                         SizedBox(
                           height: 50,
                           child: ElevatedButton(
-                            onPressed: () {},
+                            onPressed: () {
+                              context.read<AuthBloc>().add(
+                                VerifyEmailEvent(
+                                  email: _emailController.text.trim(),
+                                  otp: _otpController.text.trim(),
+                                ),
+                              );
+                            },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF6BBAA5),
                               shape: RoundedRectangleBorder(
@@ -131,7 +141,10 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
                             ),
                             child: const Text(
                               'Verify Email',
-                              style: TextStyle(fontSize: 18, color: Colors.white),
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: Colors.white,
+                              ),
                             ),
                           ),
                         ),
