@@ -18,7 +18,17 @@ dependencies:
   cupertino_icons: ^1.0.8
   country_state_city_pro: ^0.0.6
   country_picker: ^2.0.0 
+  
+  # Functional programming and error handling
+  dartz: ^0.10.1
+  
+  # Network and connectivity
+  connectivity_plus: ^6.1.4
+  http: ^1.2.0
 
+  # Local storage
+  shared_preferences: ^2.2.2
+  bloc: ^9.0.0
 
 dev_dependencies:
   flutter_test:
