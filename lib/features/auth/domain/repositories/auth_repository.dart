@@ -1,5 +1,5 @@
+import 'package:dartz/dartz.dart';
 import 'package:job_gen_mobile/core/error/failures.dart';
-import 'package:job_gen_mobile/core/utils/either.dart';
 import '../entities/tokens.dart';
 
 abstract class AuthRepository {

@@ -75,7 +75,7 @@ class _SignInPageState extends State<SignInPage> {
               ScaffoldMessenger.of(
                 context,
               ).showSnackBar(SnackBar(content: Text('Welcome back')));
-              // Navigator.pushNamed(context, '/job_listing');
+              Navigator.pushReplacementNamed(context, '/home');
             }
 
           },
