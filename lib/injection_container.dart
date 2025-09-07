@@ -106,12 +106,13 @@ Future<void> init() async {
   );
 
   // JOBS
-  // Datasources
+  // Datasources - Register local first to avoid circular dependency
   sl.registerLazySingleton<JobLocalDatasource>(
     () => JobLocalDatasourceImpl(sharedPreferences: sl()),
   );
+
   sl.registerLazySingleton<JobRemoteDatasource>(
-    () => JobRemoteDataSourceImpl(dio: sl(), localDatasource: sl()),
+    () => JobRemoteDataSourceImpl(dio: sl()),
   );
 
   // Repository
@@ -130,5 +131,17 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetTrendingJobs(repository: sl()));
 
   // Bloc
-  sl.registerFactory(() => JobsBloc(getJobs: sl()));
+  sl.registerFactory(
+    () => JobsBloc(
+      getJobs: sl(),
+      getJobById: sl(),
+      getJobBySearch: sl(),
+      getJobBySkill: sl(),
+      getJobStat: sl(),
+      getTrendingJobs: sl(),
+      getMatchedJobs: sl(),
+      getJobBySource: sl()
+
+    ),
+  );
 }

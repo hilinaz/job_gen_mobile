@@ -255,7 +255,7 @@ class _JobListingPageState extends State<JobListingPage>
                 ),
                 _buildJobsTab(
                   blocStateSelector: (state) =>
-                      state is GotJobsState ? state.jobs : [],
+                      state is GotMatchedJobsState ? state.jobs : [],
                 ),
                 _buildJobsTab(
                   blocStateSelector: (state) =>

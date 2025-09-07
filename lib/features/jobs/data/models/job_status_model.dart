@@ -7,6 +7,7 @@ class JobStatsModel extends JobStats {
     required super.jobsBySource,
   });
 
+  // Create from JSON
   factory JobStatsModel.fromJson(Map<String, dynamic> json) {
     return JobStatsModel(
       totalJobs: json['total_jobs'] as int,
@@ -19,11 +20,21 @@ class JobStatsModel extends JobStats {
     );
   }
 
+  // Convert to JSON
   Map<String, dynamic> toJson() {
     return {
       'total_jobs': totalJobs,
       'top_skills': topSkills,
       'jobs_by_source': jobsBySource,
     };
+  }
+
+  // Create from Entity
+  factory JobStatsModel.fromEntity(JobStats entity) {
+    return JobStatsModel(
+      totalJobs: entity.totalJobs,
+      topSkills: entity.topSkills,
+      jobsBySource: entity.jobsBySource,
+    );
   }
 }

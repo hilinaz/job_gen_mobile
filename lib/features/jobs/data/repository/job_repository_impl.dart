@@ -19,6 +19,7 @@ class JobRepositoryImpl implements JobRepository {
   Future<Either<Failure, Job>> getJobById({required String id}) async {
     try {
       final chosenJob = await remoteDatasource.getJobById(id: id);
+      localDatasource.cacheJob(chosenJob);
       return Right(chosenJob);
     } on DioException catch (e) {
       return Left(
@@ -33,6 +34,7 @@ class JobRepositoryImpl implements JobRepository {
   Future<Either<Failure, JobStats>> getJobStats() async {
     try {
       final remoteStats = await remoteDatasource.getJobStats();
+      localDatasource.cacheJobStats(remoteStats);
       return Right(remoteStats);
     } on DioException catch (e) {
       try {
@@ -72,7 +74,7 @@ class JobRepositoryImpl implements JobRepository {
         page: page,
         limit: limit,
       );
-
+      localDatasource.cacheJobs(remoteJobs);
       return Right(remoteJobs);
     } on DioException catch (e) {
       try {
@@ -130,7 +132,7 @@ class JobRepositoryImpl implements JobRepository {
   Future<Either<Failure, List<Job>>> getMatchedJobs() async {
     try {
       final remoteJobs = await remoteDatasource.getMatchedJobs();
-
+      localDatasource.cacheMatchedJobs(remoteJobs);
       return Right(remoteJobs);
     } on DioException catch (e) {
       try {
@@ -162,7 +164,7 @@ class JobRepositoryImpl implements JobRepository {
   Future<Either<Failure, List<Job>>> getTrendingJobs() async {
     try {
       final remoteJobs = await remoteDatasource.getTrendingJobs();
-
+      localDatasource.cacheTrendingJobs(remoteJobs);
       return Right(remoteJobs);
     } on DioException catch (e) {
       try {

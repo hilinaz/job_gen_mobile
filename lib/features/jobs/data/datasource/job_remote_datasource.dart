@@ -8,17 +8,11 @@ import 'package:job_gen_mobile/features/jobs/data/models/job_status_model.dart';
 import 'package:job_gen_mobile/features/jobs/domain/entities/job_stat.dart';
 
 abstract class JobRemoteDatasource {
-  Future<List<JobModel>> getJobs({
-    int page = 1,
-    int limit = 10,
-   
-  });
+  Future<List<JobModel>> getJobs({int page = 1, int limit = 10});
 
   Future<List<JobModel>> getJobsBySearch({required String searchKey});
-    Future<List<JobModel>> getJobsBySkills({
-    required List<String> skills,
-  });
-    Future<List<String>> getJobsBySource();
+  Future<List<JobModel>> getJobsBySkills({required List<String> skills});
+  Future<List<String>> getJobsBySource();
   Future<List<JobModel>> getMatchedJobs();
 
   Future<List<JobModel>> getTrendingJobs();
@@ -28,8 +22,8 @@ abstract class JobRemoteDatasource {
 
 class JobRemoteDataSourceImpl implements JobRemoteDatasource {
   final Dio dio;
-  final JobLocalDatasourceImpl localDatasource;
-  JobRemoteDataSourceImpl({required this.dio, required this.localDatasource});
+
+  JobRemoteDataSourceImpl({required this.dio, });
   @override
   Future<JobModel> getJobById({required String id}) async {
     final req = await dio.get("${Endpoints.getJobById}/$id");
@@ -46,7 +40,7 @@ class JobRemoteDataSourceImpl implements JobRemoteDatasource {
       );
     }
     final job = result.data!;
-    await localDatasource.cacheJob(job);
+  
     return job;
   }
 
@@ -66,20 +60,13 @@ class JobRemoteDataSourceImpl implements JobRemoteDatasource {
       );
     }
     final jobStat = result.data!;
-    await localDatasource.cacheJobStats(jobStat);
+ 
     return jobStat;
   }
 
   @override
-  Future<List<JobModel>> getJobs({
-    int page = 1,
-    int limit = 10,
-   
-  }) async {
-     final req = await dio.get(
-      Endpoints.getJobs,
-      
-    );
+  Future<List<JobModel>> getJobs({int page = 1, int limit = 10}) async {
+    final req = await dio.get(Endpoints.getJobs);
 
     final result = ApiEnvelope.fromJson(
       req.data as Map<String, dynamic>,
@@ -91,18 +78,17 @@ class JobRemoteDataSourceImpl implements JobRemoteDatasource {
     if (result.data == null) {
       throw DioException(
         requestOptions: req.requestOptions,
-        message: result.error?.message ?? 'Failed to fetch jobs'
+        message: result.error?.message ?? 'Failed to fetch jobs',
       );
     }
 
     final jobs = result.data!;
-    await localDatasource.cacheJobs(jobs);
+   
     return jobs;
-  
   }
 
   @override
- Future<List<JobModel>> getJobsBySearch({required String searchKey}) async {
+  Future<List<JobModel>> getJobsBySearch({required String searchKey}) async {
     final req = await dio.get(
       Endpoints.jobSearch,
       queryParameters: {'query': searchKey},
@@ -126,13 +112,9 @@ class JobRemoteDataSourceImpl implements JobRemoteDatasource {
     return jobs;
   }
 
-
   @override
-  Future<List<JobModel>> getMatchedJobs() async{
-     final req = await dio.get(
-      Endpoints.matchedJobs,
-      
-    );
+  Future<List<JobModel>> getMatchedJobs() async {
+    final req = await dio.get(Endpoints.matchedJobs);
 
     final result = ApiEnvelope.fromJson(
       req.data as Map<String, dynamic>,
@@ -144,22 +126,18 @@ class JobRemoteDataSourceImpl implements JobRemoteDatasource {
     if (result.data == null) {
       throw DioException(
         requestOptions: req.requestOptions,
-        message: result.error?.message ?? 'Failed to fetch jobs'
+        message: result.error?.message ?? 'Failed to fetch jobs',
       );
     }
 
     final jobs = result.data!;
-    await localDatasource.cacheMatchedJobs(jobs);
-    return jobs;
   
+    return jobs;
   }
 
   @override
-  Future<List<JobModel>> getTrendingJobs()async {
-      final req = await dio.get(
-      Endpoints.trandingJobs,
-      
-    );
+  Future<List<JobModel>> getTrendingJobs() async {
+    final req = await dio.get(Endpoints.trandingJobs);
 
     final result = ApiEnvelope.fromJson(
       req.data as Map<String, dynamic>,
@@ -171,19 +149,17 @@ class JobRemoteDataSourceImpl implements JobRemoteDatasource {
     if (result.data == null) {
       throw DioException(
         requestOptions: req.requestOptions,
-        message: result.error?.message ?? 'Failed to fetch jobs'
+        message: result.error?.message ?? 'Failed to fetch jobs',
       );
     }
 
     final jobs = result.data!;
-    await localDatasource.cacheTrendingJobs(jobs);
+
     return jobs;
-  
-  
   }
-  
+
   @override
-  Future<List<JobModel>> getJobsBySkills({required List<String> skills}) async{
+  Future<List<JobModel>> getJobsBySkills({required List<String> skills}) async {
     final skillQuery = skills.join(',');
     final req = await dio.get(
       Endpoints.jobBySkill,
@@ -200,7 +176,9 @@ class JobRemoteDataSourceImpl implements JobRemoteDatasource {
     if (result.data == null) {
       throw DioException(
         requestOptions: req.requestOptions,
-        message: result.error?.message ?? 'Failed to fetch jobs for based on the skillset',
+        message:
+            result.error?.message ??
+            'Failed to fetch jobs for based on the skillset',
       );
     }
 
@@ -208,12 +186,10 @@ class JobRemoteDataSourceImpl implements JobRemoteDatasource {
 
     return jobs;
   }
-  
+
   @override
-Future<List<String>> getJobsBySource() async {
-    final req = await dio.get(
-      Endpoints.jobSources, 
-    );
+  Future<List<String>> getJobsBySource() async {
+    final req = await dio.get(Endpoints.jobSources);
 
     final result = ApiEnvelope.fromJson(
       req.data as Map<String, dynamic>,
@@ -230,5 +206,4 @@ Future<List<String>> getJobsBySource() async {
     final sources = result.data!;
     return sources;
   }
-
 }
