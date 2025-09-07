@@ -1,5 +1,5 @@
 class Endpoints {
-  static const basePath = 'http://10.94.26.168:8081/api/v1';
+  static const basePath = 'http://localhost:8080/api/v1';
   static const login = '$basePath/auth/login';
   static const register        = '$basePath/auth/register';
   static const verifyEmail     = '$basePath/auth/verify-email';
@@ -9,4 +9,11 @@ class Endpoints {
   static const refresh         = '$basePath/auth/refresh';
   static const logout          = '$basePath/auth/logout';
   static const changePassword  = '$basePath/auth/change-password';
+
+  static const uploadProfile   = '$basePath/files/upload/profile';
+  static const uploadDocument  = '$basePath/files/upload/document';
+  static const downloadFile    = '$basePath/files';
+  static const deleteFile      = '$basePath/files';
+  static const profilePictureMe= '$basePath/files/profile-picture/me';
+  static const profilePicture  = '$basePath/files/profile-picture';
 }
