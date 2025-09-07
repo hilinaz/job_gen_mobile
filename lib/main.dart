@@ -14,6 +14,8 @@ import 'package:job_gen_mobile/features/admin/presentation/bloc/user_management/
 import 'package:job_gen_mobile/features/admin/presentation/pages/admin_dashboard_screen.dart';
 import 'package:job_gen_mobile/features/admin/presentation/pages/user_list_screen.dart';
 import 'package:job_gen_mobile/core/widgets/admin_role_guard.dart';
+import 'package:job_gen_mobile/features/jobs/presentation/bloc/jobs_bloc.dart';
+import 'package:job_gen_mobile/features/jobs/presentation/pages/job_listing_page.dart';
 
 import 'injection_container.dart' as di;
 
@@ -35,6 +37,7 @@ class MyApp extends StatelessWidget {
         BlocProvider<UserManagementBloc>(
           create: (context) => di.sl<UserManagementBloc>(),
         ),
+         BlocProvider<JobsBloc>(create: (context) => di.sl<JobsBloc>()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -47,17 +50,22 @@ class MyApp extends StatelessWidget {
         ),
         initialRoute: '/',
         routes: {
+          //auth
           '/': (_) => const SplashScreen(),
           '/onboarding': (_) => const OnBoardingScreen(),
           '/sign_up': (_) => SignUpPage(),
           '/verify_email': (_) => VerifyEmailPage(),
           '/sign_in': (_) => SignInPage(),
-
           '/forgot_password': (_) => ForgotPasswordPage(),
           '/reset_password': (_) => ResetPasswordPage(),
           '/home': (_) => const HomeScreen(),
+
+          //admin
           '/admin_dashboard': (_) => AdminRoleGuard(child: AdminDashboardScreen()),
           '/admin_users': (_) => AdminRoleGuard(child: UserListScreen()),
+
+          //jobs
+          '/job_listing':(_)=>JobListingPage()
         },
       ),
     );
