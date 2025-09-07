@@ -1,22 +1,3 @@
-// class Endpoints {
-//   static const baseUrl1 = 'https://api.jobgen.io';
-//   static const baseUrl2 = 'http://localhost:8080';
-//   static const basePath = '/api/v1';
-//   static const login = '/auth/login';
-//   static const register = '/auth/register';
-//   static const verifyEmail = '/auth/verify-email';
-//   static const resendOtp = '/auth/resend-otp';
-//   static const forgotPassword = '/auth/forgot-password';
-//   static const resetPassword = '/auth/reset-password';
-//   static const refresh = '/auth/refresh';
-//   static const logout = '/auth/logout';
-//   static const changePassword = '/auth/change-password';
-
-//   static const getProfile = '/users/profile';
-//   static const updateProfile = '/users/profile';
-//   static const deleteProfile = '/users/account';
-// }
-
 class Endpoints {
   // Use this variable to switch between environments
   static const bool useLocalhost = true; // Set to false when using production
@@ -42,4 +23,26 @@ class Endpoints {
   static String get getProfile => '$baseUrl$basePath/users/profile';
   static String get updateProfile => '$baseUrl$basePath/users/profile';
   static String get deleteProfile => '$baseUrl$basePath/users/account';
+
+  // user CV
+  static String get uploadCV => '$baseUrl$basePath/files/upload/document';
+  static String get downloadCV => '$baseUrl$basePath/files/:id';
+  static String get deleteCV => '$baseUrl$basePath/files/:id';
+
+  // profile picture photo (files routes)
+  static String get uploadProfilePicture =>
+      '$baseUrl$basePath/files/upload/profile';
+  // No dedicated update route on backend; reuse upload to replace the picture
+  static String get updateProfilePicture =>
+      '$baseUrl$basePath/files/upload/profile';
+  // Get specific user's profile picture by id
+  static String get downloadProfilePictureById =>
+      '$baseUrl$basePath/files/profile-picture/:id';
+  static String get downloadProfilePicture =>
+      '$baseUrl$basePath/files/profile-picture/me';
+  // Alias for clarity
+  static String get getMyProfilePicture =>
+      '$baseUrl$basePath/files/profile-picture/me';
+  static String get deleteProfilePicture =>
+      '$baseUrl$basePath/files/profile-picture/me';
 }

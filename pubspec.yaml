@@ -18,6 +18,8 @@ dependencies:
   cupertino_icons: ^1.0.8
   country_state_city_pro: ^0.0.6
   country_picker: ^2.0.0 
+  image_picker: ^1.0.4
+
   
   # Functional programming and error handling
   dartz: ^0.10.1
@@ -29,6 +31,10 @@ dependencies:
   # Local storage
   shared_preferences: ^2.2.2
   bloc: ^9.0.0
+  syncfusion_flutter_pdfviewer: ^31.1.17
+
+  build_runner: ^2.4.6
+  build_runner_core: ^7.1.1
 
 dev_dependencies:
   flutter_test:

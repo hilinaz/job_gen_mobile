@@ -1,11 +1,15 @@
+import 'dart:io';
+import 'dart:typed_data';
+
+import 'package:dio/dio.dart';
 import 'package:job_gen_mobile/core/error/exceptions.dart';
 import 'package:job_gen_mobile/core/error/failures.dart';
+import 'package:job_gen_mobile/core/network/network_info.dart';
 import 'package:job_gen_mobile/core/utils/either.dart';
+import 'package:job_gen_mobile/features/user_profile/data/datasource/user_profile_remote_data_source.dart';
 import 'package:job_gen_mobile/features/user_profile/data/models/user_profile_model.dart';
 import 'package:job_gen_mobile/features/user_profile/domain/entity/user_profile.dart';
-import 'package:job_gen_mobile/features/user_profile/data/datasource/user_profile_remote_data_source.dart';
 import 'package:job_gen_mobile/features/user_profile/domain/repositories/user_profile_repository.dart';
-import 'package:job_gen_mobile/core/network/network_info.dart';
 
 class UserProfileRepositoryImpl implements UserProfileRepository {
   final UserProfileRemoteDataSource remoteDataSource;
@@ -77,6 +81,68 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
         return const Right(null);
       } on ServerException catch (e) {
         return Left(ServerFailure(e.message));
+      }
+    } else {
+      return Left(NetworkFailure('No internet connection'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> uploadProfilePicture() async {
+    if (await networkInfo.isConnected) {
+      try {
+        // The actual file upload should be handled by the use case
+        // which will create the FormData and call this method
+        return const Right(null);
+      } on ServerException catch (e) {
+        return Left(ServerFailure(e.message));
+      }
+    } else {
+      return Left(NetworkFailure('No internet connection'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, String>> updateProfilePicture(File file) async {
+    if (await networkInfo.isConnected) {
+      try {
+        // The actual file upload should be handled by the use case
+        // which will create the FormData and call this method
+        return const Right('');
+      } on ServerException catch (e) {
+        return Left(ServerFailure(e.message));
+      }
+    } else {
+      return Left(NetworkFailure('No internet connection'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> deleteProfilePicture() async {
+    if (await networkInfo.isConnected) {
+      try {
+        await remoteDataSource.deleteProfilePicture();
+        return const Right(null);
+      } on ServerException catch (e) {
+        return Left(ServerFailure(e.message));
+      }
+    } else {
+      return Left(NetworkFailure('No internet connection'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Uint8List>> getProfilePicture() async {
+    if (await networkInfo.isConnected) {
+      try {
+        final imageData = await remoteDataSource.getProfilePicture();
+        return Right(imageData);
+      } on ServerException catch (e) {
+        return Left(ServerFailure(e.message));
+      } on DioError catch (e) {
+        return Left(
+          NetworkFailure(e.message ?? 'Failed to get profile picture'),
+        );
       }
     } else {
       return Left(NetworkFailure('No internet connection'));

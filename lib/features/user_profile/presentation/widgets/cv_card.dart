@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:job_gen_mobile/features/user_profile/presentation/pages/cv_viewer_page.dart';
 
 class CVCard extends StatelessWidget {
   final bool newUser;
 
-  const CVCard({
-    super.key,
-    required this.newUser,
-  });
+  const CVCard({super.key, required this.newUser});
 
   @override
   Widget build(BuildContext context) {
@@ -30,25 +28,41 @@ class CVCard extends StatelessWidget {
         children: [
           // Title
           Text(
-              'CV\'s',
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold,
-                  ),
+            'CV\'s',
+            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+              color: Colors.black,
+              fontWeight: FontWeight.bold,
             ),
-          
+          ),
+
           const SizedBox(height: 8),
           // Subtitle
           Center(
-            child: newUser ? Text("No CV's uploaded yet",
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w500,
-                    color: Colors.grey[700],
+            child: newUser
+                ? GestureDetector(
+                    onTap: () {
+                      // Navigator.push(
+                      //   context,
+                      //   MaterialPageRoute(
+                      //     builder: (context) => const CVViewerPage(pdfBytes: ),
+                      //   ),
+                      // );
+                    },
+                    child: Text(
+                      "No CV's uploaded yet",
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey[700],
+                      ),
+                    ),
+                  )
+                : Center(
+                    child: Icon(
+                      Icons.image,
+                      size: 100,
+                      color: Colors.grey[300],
+                    ),
                   ),
-            ): Center(
-              child: 
-              Icon(Icons.image, size: 100, color: Colors.grey[300]),
-            ),
           ),
           const SizedBox(height: 24),
           // Section Label
@@ -56,10 +70,10 @@ class CVCard extends StatelessWidget {
             child: Text(
               'Professional CV',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                    fontSize: 18,
-                  ),
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+                fontSize: 18,
+              ),
             ),
           ),
           const SizedBox(height: 16),
@@ -67,50 +81,62 @@ class CVCard extends StatelessWidget {
           Center(
             child: Column(
               children: [
-                 ElevatedButton(
-            onPressed: () {},
-            style: ElevatedButton.styleFrom(
-              minimumSize: const Size(220, 50),
-              backgroundColor: const Color(0xFF7BBFB3),
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 14.0),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
-              elevation: 2,
-            ),
-            child: Text(
-              newUser ? 'Upload your CV' : 'Upload new CV',
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          // Delete Button (only if not new user)
-          if (!newUser)
-            ElevatedButton(
-              
-              onPressed: () {},
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size(220, 50),
-                backgroundColor: const Color(0xFF7BBFB3),
-                side: const BorderSide(color: Color(0xFF7BBFB3), width: 2),
-                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 14.0),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
-                elevation: 0,
-              ),
-              child: const Text(
-                'Delete CV',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                ElevatedButton(
+                  onPressed: () {},
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size(220, 50),
+                    backgroundColor: const Color(0xFF7BBFB3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24.0,
+                      vertical: 14.0,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
+                    elevation: 2,
+                  ),
+                  child: Text(
+                    newUser ? 'Upload your CV' : 'Upload new CV',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
-              ),
-            ),
+                const SizedBox(height: 16),
+                // Delete Button (only if not new user)
+                if (!newUser)
+                  ElevatedButton(
+                    onPressed: () {},
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size(220, 50),
+                      backgroundColor: const Color(0xFF7BBFB3),
+                      side: const BorderSide(
+                        color: Color(0xFF7BBFB3),
+                        width: 2,
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24.0,
+                        vertical: 14.0,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12.0),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: const Text(
+                      'Delete CV',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
               ],
             ),
-          )
+          ),
         ],
       ),
     );

@@ -26,6 +26,30 @@ class UserProfileDeleting extends UserProfileState {}
 
 class AccountDeleted extends UserProfileState {}
 
+class ProfilePictureDeleted extends UserProfileState {}
+
+class ProfilePictureLoading extends UserProfileState {}
+
+class ProfilePictureLoaded extends UserProfileState {
+  final Uint8List imageData;
+
+  const ProfilePictureLoaded({required this.imageData});
+
+  @override
+  List<Object> get props => [imageData];
+}
+
+class ProfilePictureDownloading extends UserProfileState {}
+
+class ProfilePictureDownloaded extends UserProfileState {
+  final String filePath;
+
+  const ProfilePictureDownloaded({required this.filePath});
+
+  @override
+  List<Object> get props => [filePath];
+}
+
 class UserProfileError extends UserProfileState {
   final String message;
 
