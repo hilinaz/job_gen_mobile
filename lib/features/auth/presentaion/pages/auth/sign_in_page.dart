@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:job_gen_mobile/features/auth/presentaion/bloc/auth_bloc.dart';
-import '../../widget/widget.dart'; // Make sure buildInputField and buildSocialButton are imported
+
+import '../../widget/widget.dart'; 
 
 class SignInPage extends StatefulWidget {
   const SignInPage({super.key});
@@ -77,7 +78,6 @@ class _SignInPageState extends State<SignInPage> {
               ).showSnackBar(SnackBar(content: Text('Welcome back')));
               Navigator.pushReplacementNamed(context, '/job_listing');
             }
-
           },
           child: LayoutBuilder(
             builder: (context, constraints) {

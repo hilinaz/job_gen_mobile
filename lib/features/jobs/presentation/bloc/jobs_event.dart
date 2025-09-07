@@ -7,7 +7,11 @@ sealed class JobsEvent extends Equatable {
   List<Object> get props => [];
 }
 
-class GetJobsEvent extends JobsEvent {}
+class GetJobsEvent extends JobsEvent {
+  final int page;
+  final int limit;
+  const GetJobsEvent({this.page = 1, this.limit = 10});
+}
 
 class GetMatchedJobsEvent extends JobsEvent {}
 
@@ -27,7 +31,7 @@ class GetTrendingJobsEvent extends JobsEvent {}
 
 class GetJobByIdEvent extends JobsEvent {
   final String id;
-const  GetJobByIdEvent({required this.id});
+  const GetJobByIdEvent({required this.id});
 }
 
-class GetJobStatsEvent extends JobsEvent{}
+class GetJobStatsEvent extends JobsEvent {}

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:job_gen_mobile/features/jobs/data/models/job_model.dart';
 import 'package:job_gen_mobile/features/jobs/presentation/bloc/jobs_bloc.dart';
+import 'package:job_gen_mobile/features/auth/presentaion/bloc/auth_bloc.dart';
 import '../widgets/widget.dart';
 
 enum SearchType { keyword, skill }
@@ -20,23 +21,70 @@ class _JobListingPageState extends State<JobListingPage>
   late TabController _tabController;
   bool _isSearching = false;
   SearchType _searchType = SearchType.keyword;
+  List<JobModel> _cachedTrending = [];
+  List<JobModel> _cachedMatched = [];
+  List<JobModel> _cachedAll = [];
+  final ScrollController _allScroll = ScrollController();
+  int _allPage = 1;
+  bool _isLoadingMoreAll = false;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _tabController.addListener(_onTabChanged);
 
-    final bloc = context.read<JobsBloc>();
-    bloc.add(GetJobsEvent());
-    bloc.add(GetTrendingJobsEvent());
-    bloc.add(GetMatchedJobsEvent());
+    // Load Trending on open
+    context.read<JobsBloc>().add(GetTrendingJobsEvent());
+    _allScroll.addListener(_onAllScroll);
   }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _allScroll.dispose();
     _tabController.dispose();
     super.dispose();
+  }
+
+  void _onAllScroll() {
+    if (_tabController.index != 2) return; // Only on All tab
+    if (_isLoadingMoreAll) return;
+    if (!_allScroll.hasClients) return;
+    final pos = _allScroll.position;
+    if (pos.pixels >= pos.maxScrollExtent - 200) {
+      _isLoadingMoreAll = true;
+      _allPage += 1;
+      context.read<JobsBloc>().add(GetJobsEvent(page: _allPage, limit: 10));
+      Future.delayed(const Duration(milliseconds: 300), () {
+        _isLoadingMoreAll = false;
+      });
+    }
+  }
+
+  Future<void> _handleLogout() async {
+    // Show a quick confirmation and then dispatch logout
+    context.read<AuthBloc>().add(SignOutEvent());
+    // Wait a short moment to avoid visible loading loop on current page
+    await Future.delayed(const Duration(milliseconds: 150));
+    if (!mounted) return;
+    Navigator.pushNamedAndRemoveUntil(context, '/sign_in', (route) => false);
+  }
+
+  void _onTabChanged() {
+    if (_tabController.indexIsChanging) return;
+    final bloc = context.read<JobsBloc>();
+    switch (_tabController.index) {
+      case 0: // Trending
+        bloc.add(GetTrendingJobsEvent());
+        break;
+      case 1: // For You
+        bloc.add(GetMatchedJobsEvent());
+        break;
+      case 2: // All
+        bloc.add(GetJobsEvent());
+        break;
+    }
   }
 
   void _toggleSearch() {
@@ -67,7 +115,9 @@ class _JobListingPageState extends State<JobListingPage>
     if (_searchType == SearchType.skill) {
       _addSkill(value.trim());
     } else if (_searchType == SearchType.keyword && value.isNotEmpty) {
-      context.read<JobsBloc>().add(GetJobsBySearchEvent(searchParam: value.trim()));
+      context.read<JobsBloc>().add(
+        GetJobsBySearchEvent(searchParam: value.trim()),
+      );
     }
   }
 
@@ -116,9 +166,89 @@ class _JobListingPageState extends State<JobListingPage>
           ),
         ),
         actions: [
-          IconButton(
+          PopupMenuButton<String>(
             icon: const Icon(Icons.menu, color: Colors.white),
-            onPressed: () {},
+            color: Colors.white,
+            elevation: 8,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            onSelected: (value) async {
+              switch (value) {
+                case 'profile':
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Profile coming soon')),
+                  );
+                  break;
+                case 'jobstats':
+                  if (!mounted) return;
+                  Navigator.pushNamed(context, '/job_stats');
+                  break;
+                case 'chatbot':
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Chatbot coming soon')),
+                  );
+                  break;
+                case 'logout':
+                  await _handleLogout();
+                  break;
+              }
+            },
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: 'profile',
+                child: SizedBox(
+                  width: 220,
+                  child: Row(
+                    children: const [
+                      Icon(Icons.person_outline, color: Colors.black87),
+                      SizedBox(width: 12),
+                      Text('Profile'),
+                    ],
+                  ),
+                ),
+              ),
+              PopupMenuItem(
+                value: 'jobstats',
+                child: SizedBox(
+                  width: 220,
+                  child: Row(
+                    children: const [
+                      Icon(Icons.bar_chart_outlined, color: Colors.black87),
+                      SizedBox(width: 12),
+                      Text('Job Stats'),
+                    ],
+                  ),
+                ),
+              ),
+              PopupMenuItem(
+                value: 'chatbot',
+                child: SizedBox(
+                  width: 220,
+                  child: Row(
+                    children: const [
+                      Icon(Icons.chat_bubble_outline, color: Colors.black87),
+                      SizedBox(width: 12),
+                      Text('Chatbot'),
+                    ],
+                  ),
+                ),
+              ),
+              const PopupMenuDivider(),
+              PopupMenuItem(
+                value: 'logout',
+                child: SizedBox(
+                  width: 220,
+                  child: Row(
+                    children: const [
+                      Icon(Icons.logout, color: Colors.redAccent),
+                      SizedBox(width: 12),
+                      Text('Logout'),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
           const SizedBox(width: 8),
         ],
@@ -244,24 +374,46 @@ class _JobListingPageState extends State<JobListingPage>
               Tab(text: 'All'),
             ],
           ),
-          // Job list
+
           Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                _buildJobsTab(
-                  blocStateSelector: (state) =>
-                      state is GotTrendingJobsState ? state.jobs : [],
-                ),
-                _buildJobsTab(
-                  blocStateSelector: (state) =>
-                      state is GotMatchedJobsState ? state.jobs : [],
-                ),
-                _buildJobsTab(
-                  blocStateSelector: (state) =>
-                      state is GotJobsState ? state.jobs: [],
+            child: MultiBlocListener(
+              listeners: [
+                // Only keep caching for All (pagination). For You handled via bloc fallback
+                BlocListener<JobsBloc, JobsState>(
+                  listenWhen: (p, c) => c is GotJobsState,
+                  listener: (context, state) {
+                    final s = state as GotJobsState;
+                    final existingIds = _cachedAll.map((e) => e.id).toSet();
+                    final merged = [
+                      ..._cachedAll,
+                      ...s.jobs.where((j) => !existingIds.contains(j.id)),
+                    ];
+                    _cachedAll = merged;
+                  },
                 ),
               ],
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildJobsTabFromState(
+                    selector: (state) => state is GotTrendingJobsState
+                        ? state.jobs
+                        : const <JobModel>[],
+                  ),
+                  _buildJobsTabFromState(
+                    selector: (state) {
+                      if (state is GotMatchedJobsState) return state.jobs;
+                      if (state is GotJobsState)
+                        return state.jobs; // fallback to all
+                      return const <JobModel>[];
+                    },
+                  ),
+                  _buildJobsTab(
+                    dataProvider: () => _cachedAll,
+                    controller: _allScroll,
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -271,17 +423,20 @@ class _JobListingPageState extends State<JobListingPage>
 
   /// Generic builder for a jobs tab
   Widget _buildJobsTab({
-    required List<JobModel> Function(JobsState state) blocStateSelector,
+    required List<JobModel> Function() dataProvider,
+    ScrollController? controller,
   }) {
     return BlocBuilder<JobsBloc, JobsState>(
       builder: (context, state) {
-        if (state is JobLoadingState) {
-          return const Center(child: CircularProgressIndicator());
-        } else if (state is JobFetchingErrorState) {
-          return Center(child: Text(state.message));
+        final jobs = dataProvider();
+        if (jobs.isEmpty) {
+          if (state is JobLoadingState) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (state is JobFetchingErrorState) {
+            return Center(child: Text(state.message));
+          }
         }
-
-        final jobs = blocStateSelector(state);
         final filteredJobs = _filterJobs(jobs);
 
         if (filteredJobs.isEmpty) {
@@ -291,12 +446,60 @@ class _JobListingPageState extends State<JobListingPage>
         return ListView.builder(
           padding: const EdgeInsets.all(16),
           itemCount: filteredJobs.length,
+          controller: controller,
           itemBuilder: (context, index) {
             final job = filteredJobs[index];
             return jobListingCard(
               title: job.title,
               company: job.companyName,
               description: job.description,
+              onTap: () {
+                Navigator.pushNamed(
+                  context,
+                  '/job_detail',
+                  arguments: {'id': job.id},
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
+  /// Builder for tabs that read from bloc (Trending, For You)
+  Widget _buildJobsTabFromState({
+    required List<JobModel> Function(JobsState state) selector,
+  }) {
+    return BlocBuilder<JobsBloc, JobsState>(
+      builder: (context, state) {
+        if (state is JobLoadingState) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (state is JobFetchingErrorState) {
+          return Center(child: Text(state.message));
+        }
+        final jobs = selector(state);
+        final filteredJobs = _filterJobs(jobs);
+        if (filteredJobs.isEmpty) {
+          return const Center(child: Text('No jobs found.'));
+        }
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: filteredJobs.length,
+          itemBuilder: (context, index) {
+            final job = filteredJobs[index];
+            return jobListingCard(
+              title: job.title,
+              company: job.companyName,
+              description: job.description,
+              onTap: () {
+                Navigator.pushNamed(
+                  context,
+                  '/job_detail',
+                  arguments: {'id': job.id},
+                );
+              },
             );
           },
         );

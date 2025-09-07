@@ -8,17 +8,22 @@ class JobStatsModel extends JobStats {
   });
 
   // Create from JSON
-  factory JobStatsModel.fromJson(Map<String, dynamic> json) {
+factory JobStatsModel.fromJson(Map<String, dynamic> json) {
     return JobStatsModel(
       totalJobs: json['total_jobs'] as int,
-      topSkills: List<String>.from(json['top_skills'] as List),
+      topSkills:
+          (json['top_skills'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          [], // default to empty list if null
       jobsBySource: Map<String, int>.from(
-        (json['jobs_by_source'] as Map).map(
-          (key, value) => MapEntry(key as String, value as int),
+        (json['jobs_by_source'] as Map<String, dynamic>).map(
+          (key, value) => MapEntry(key, value as int),
         ),
       ),
     );
   }
+
 
   // Convert to JSON
   Map<String, dynamic> toJson() {

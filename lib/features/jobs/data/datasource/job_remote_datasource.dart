@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:job_gen_mobile/core/constants/endpoints.dart';
 import 'package:job_gen_mobile/core/network/envelope.dart';
+import 'package:job_gen_mobile/features/auth/data/datasources/auth_remote_datasource.dart';
 
 import 'package:job_gen_mobile/features/jobs/data/datasource/job_local_datasource.dart';
 import 'package:job_gen_mobile/features/jobs/data/models/job_model.dart';
@@ -23,137 +24,163 @@ abstract class JobRemoteDatasource {
 class JobRemoteDataSourceImpl implements JobRemoteDatasource {
   final Dio dio;
 
-  JobRemoteDataSourceImpl({required this.dio, });
+  JobRemoteDataSourceImpl({required this.dio});
   @override
   Future<JobModel> getJobById({required String id}) async {
-    final req = await dio.get("${Endpoints.getJobById}/$id");
+    final url = Endpoints.getJobById.replaceAll('{id}', id);
+    print('[JobRemote] GET $url');
+    final req = await dio.get(url);
+    print('[JobRemote] status: ${req.statusCode}');
 
-    final result = ApiEnvelope.fromJson(
-      req.data as Map<String, dynamic>,
-      (data) => JobModel.fromJson(Map<String, dynamic>.from(data as Map)),
+    final Map<String, dynamic> root = Map<String, dynamic>.from(
+      req.data as Map,
     );
+    final Object? maybeData = root.containsKey('data') ? root['data'] : root;
+    Map<String, dynamic>? obj;
+    if (maybeData is Map<String, dynamic>) {
+      if (maybeData.containsKey('job') && maybeData['job'] is Map) {
+        obj = Map<String, dynamic>.from(maybeData['job'] as Map);
+      } else {
+        obj = maybeData;
+      }
+    }
 
-    if (result.data == null) {
+    if (obj == null) {
+      print('[JobRemote] getJobById parse error. body: ${req.data}');
       throw DioException(
         requestOptions: req.requestOptions,
-        message: result.error?.message ?? 'Failed to fetch job with id $id',
+        message: 'Failed to fetch job with id $id',
       );
     }
-    final job = result.data!;
-  
+    final job = JobModel.fromJson(obj);
+
     return job;
   }
 
   @override
-  Future<JobStats> getJobStats() async {
+Future<JobStats> getJobStats() async {
+    print('[JobRemote] GET ${Endpoints.jobStats}');
     final req = await dio.get(Endpoints.jobStats);
+    print('[JobRemote] status: ${req.data}');
 
-    final result = ApiEnvelope.fromJson(
-      req.data as Map<String, dynamic>,
-      (data) => JobStatsModel.fromJson(Map<String, dynamic>.from(data as Map)),
-    );
+    final Map<String, dynamic> body = req.data as Map<String, dynamic>;
 
-    if (result.data == null) {
+    if (body['success'] != true) {
       throw DioException(
         requestOptions: req.requestOptions,
-        message: result.error?.message,
+        message: body['error']?['message'] ?? 'Failed to fetch job stats',
       );
     }
-    final jobStat = result.data!;
- 
+
+    final data = body['data'] as Map<String, dynamic>;
+    final jobStat = JobStatsModel.fromJson(data);
+
     return jobStat;
   }
 
   @override
   Future<List<JobModel>> getJobs({int page = 1, int limit = 10}) async {
-    final req = await dio.get(Endpoints.getJobs);
+    print('[JobRemote] GET ${Endpoints.getJobs}?page=$page&limit=$limit');
+    final req = await dio.get(
+      Endpoints.getJobs,
+      queryParameters: {'page': page, 'limit': limit},
+    );
+    print('[JobRemote] status: ${req.statusCode}');
 
-    final result = ApiEnvelope.fromJson(
+    final env = ApiEnvelope.fromJson(
       req.data as Map<String, dynamic>,
-      (data) => (data as List)
-          .map((e) => JobModel.fromJson(Map<String, dynamic>.from(e)))
-          .toList(),
+      (data) => data,
     );
 
-    if (result.data == null) {
-      throw DioException(
-        requestOptions: req.requestOptions,
-        message: result.error?.message ?? 'Failed to fetch jobs',
-      );
-    }
+    final Object? data = env.data;
+    final List<dynamic> items = data is List
+        ? data
+        : (data is Map<String, dynamic> ? (data['items'] as List? ?? []) : []);
 
-    final jobs = result.data!;
-   
+    print(env.data);
+    final jobs = items
+        .map((e) => JobModel.fromJson(Map<String, dynamic>.from(e as Map)))
+        .toList();
+
     return jobs;
   }
 
   @override
   Future<List<JobModel>> getJobsBySearch({required String searchKey}) async {
+    print('[JobRemote] GET ${Endpoints.jobSearch} query=$searchKey');
     final req = await dio.get(
       Endpoints.jobSearch,
       queryParameters: {'query': searchKey},
     );
+    print('[JobRemote] status: ${req.data}');
 
-    final result = ApiEnvelope.fromJson(
+    final env = ApiEnvelope.fromJson(
       req.data as Map<String, dynamic>,
-      (data) => (data as List)
-          .map((e) => JobModel.fromJson(Map<String, dynamic>.from(e)))
-          .toList(),
+      (data) => data,
     );
 
-    if (result.data == null) {
-      throw DioException(
-        requestOptions: req.requestOptions,
-        message: result.error?.message ?? 'Failed to fetch jobs for $searchKey',
-      );
-    }
+    final Object? data = env.data;
+    final List<dynamic> items = data is List
+        ? data
+        : (data is Map<String, dynamic> ? (data['items'] as List? ?? []) : []);
 
-    final jobs = result.data!;
+    print(
+      '[JobRemote] getJobsBySearch data shape: ${env.data.runtimeType} items: ${items.length}',
+    );
+    final jobs = items
+        .map((e) => JobModel.fromJson(Map<String, dynamic>.from(e as Map)))
+        .toList();
     return jobs;
   }
 
   @override
   Future<List<JobModel>> getMatchedJobs() async {
+    print('[JobRemote] GET ${Endpoints.matchedJobs}');
     final req = await dio.get(Endpoints.matchedJobs);
+    print('[JobRemote] status: ${req.data}');
 
-    final result = ApiEnvelope.fromJson(
+    final env = ApiEnvelope.fromJson(
       req.data as Map<String, dynamic>,
-      (data) => (data as List)
-          .map((e) => JobModel.fromJson(Map<String, dynamic>.from(e)))
-          .toList(),
+      (data) => data,
     );
 
-    if (result.data == null) {
-      throw DioException(
-        requestOptions: req.requestOptions,
-        message: result.error?.message ?? 'Failed to fetch jobs',
-      );
-    }
+    final Object? data = env.data;
+    final List<dynamic> items = data is List
+        ? data
+        : (data is Map<String, dynamic> ? (data['items'] as List? ?? []) : []);
 
-    final jobs = result.data!;
-  
+    print(
+      '[JobRemote] getMatchedJobs data shape: ${env.data.runtimeType} items: ${items.length}',
+    );
+    final jobs = items
+        .map((e) => JobModel.fromJson(Map<String, dynamic>.from(e as Map)))
+        .toList();
+
     return jobs;
   }
 
   @override
   Future<List<JobModel>> getTrendingJobs() async {
+    print('[JobRemote] GET ${Endpoints.trandingJobs}');
     final req = await dio.get(Endpoints.trandingJobs);
+    print('[JobRemote] status: ${req.statusCode}');
 
-    final result = ApiEnvelope.fromJson(
+    final env = ApiEnvelope.fromJson(
       req.data as Map<String, dynamic>,
-      (data) => (data as List)
-          .map((e) => JobModel.fromJson(Map<String, dynamic>.from(e)))
-          .toList(),
+      (data) => data,
     );
 
-    if (result.data == null) {
-      throw DioException(
-        requestOptions: req.requestOptions,
-        message: result.error?.message ?? 'Failed to fetch jobs',
-      );
-    }
+    final Object? data = env.data;
+    final List<dynamic> items = data is List
+        ? data
+        : (data is Map<String, dynamic>
+              ? ((data['items'] as List?) ?? (data['jobs'] as List?) ?? [])
+              : []);
 
-    final jobs = result.data!;
+    print('treding ${env.data}');
+    final jobs = items
+        .map((e) => JobModel.fromJson(Map<String, dynamic>.from(e as Map)))
+        .toList();
 
     return jobs;
   }
@@ -161,49 +188,52 @@ class JobRemoteDataSourceImpl implements JobRemoteDatasource {
   @override
   Future<List<JobModel>> getJobsBySkills({required List<String> skills}) async {
     final skillQuery = skills.join(',');
+    print('[JobRemote] GET ${Endpoints.jobBySkill} skills=$skillQuery');
     final req = await dio.get(
       Endpoints.jobBySkill,
       queryParameters: {'query': skillQuery},
     );
+    print('[JobRemote] status: ${req.statusCode}');
 
-    final result = ApiEnvelope.fromJson(
+    final env = ApiEnvelope.fromJson(
       req.data as Map<String, dynamic>,
-      (data) => (data as List)
-          .map((e) => JobModel.fromJson(Map<String, dynamic>.from(e)))
-          .toList(),
+      (data) => data,
     );
 
-    if (result.data == null) {
-      throw DioException(
-        requestOptions: req.requestOptions,
-        message:
-            result.error?.message ??
-            'Failed to fetch jobs for based on the skillset',
-      );
-    }
+    final Object? data = env.data;
+    final List<dynamic> items = data is List
+        ? data
+        : (data is Map<String, dynamic> ? (data['items'] as List? ?? []) : []);
 
-    final jobs = result.data!;
+    print(
+      '[JobRemote] getJobsBySkills data shape: ${env.data.runtimeType} items: ${items.length}',
+    );
+    final jobs = items
+        .map((e) => JobModel.fromJson(Map<String, dynamic>.from(e as Map)))
+        .toList();
 
     return jobs;
   }
 
   @override
   Future<List<String>> getJobsBySource() async {
+    print('[JobRemote] GET ${Endpoints.jobSources}');
     final req = await dio.get(Endpoints.jobSources);
+    print('[JobRemote] status: ${req.statusCode}');
 
-    final result = ApiEnvelope.fromJson(
+    final env = ApiEnvelope.fromJson(
       req.data as Map<String, dynamic>,
-      (data) => List<String>.from(data as List),
+      (data) => data,
     );
 
-    if (result.data == null) {
-      throw DioException(
-        requestOptions: req.requestOptions,
-        message: result.error?.message ?? 'Failed to fetch job sources',
-      );
-    }
+    final Object? data = env.data;
+    final List<dynamic> items = data is List
+        ? data
+        : (data is Map<String, dynamic> ? (data['items'] as List? ?? []) : []);
 
-    final sources = result.data!;
-    return sources;
+    print(
+      '[JobRemote] getJobsBySource data shape: ${env.data.runtimeType} items: ${items.length}',
+    );
+    return items.map((e) => e.toString()).toList();
   }
 }

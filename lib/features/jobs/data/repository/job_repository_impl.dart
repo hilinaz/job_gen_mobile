@@ -31,35 +31,24 @@ class JobRepositoryImpl implements JobRepository {
   }
 
   @override
-  Future<Either<Failure, JobStats>> getJobStats() async {
+Future<Either<Failure, JobStats>> getJobStats() async {
     try {
       final remoteStats = await remoteDatasource.getJobStats();
-      localDatasource.cacheJobStats(remoteStats);
+      try {
+        localDatasource.cacheJobStats(remoteStats);
+      } catch (e) {
+        print('[LocalCache] Failed to cache job stats: $e');
+      }
       return Right(remoteStats);
     } on DioException catch (e) {
-      try {
-        final cachedStats = await localDatasource.getCachedJobStats();
-        if (cachedStats != null) {
-          return Right(cachedStats);
-        } else {
-          return Left(
-            ServerFailure(
-              message:
-                  e.message ??
-                  'Failed to load Job Stats. Please try again later.',
-            ),
-          );
-        }
-      } catch (_) {
-        return Left(
-          ServerFailure(
-            message:
-                e.message ??
-                'Failed to load Job Stats. Please try again later.',
-          ),
-        );
-      }
+      return Left(
+        ServerFailure(
+          message:
+              e.message ?? 'Failed to load Job Stats. Please try again later.',
+        ),
+      );
     } catch (e) {
+      print('[JobRepo] Unexpected error: $e');
       return Left(ServerFailure(message: 'Unexpected error occurred.'));
     }
   }

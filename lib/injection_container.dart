@@ -140,8 +140,7 @@ Future<void> init() async {
       getJobStat: sl(),
       getTrendingJobs: sl(),
       getMatchedJobs: sl(),
-      getJobBySource: sl()
-
+      getJobBySource: sl(),
     ),
   );
 }

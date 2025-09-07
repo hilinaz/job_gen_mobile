@@ -1,5 +1,6 @@
 import 'package:job_gen_mobile/core/parser/html_parser.dart';
 import 'package:job_gen_mobile/features/jobs/domain/entities/job.dart';
+
 class JobModel extends Job {
   JobModel({
     required super.id,
@@ -21,21 +22,32 @@ class JobModel extends Job {
 
   factory JobModel.fromJson(Map<String, dynamic> json) {
     return JobModel(
-      id: json['id'] as String,
-      title: json['title'] as String,
-      companyName: json['company_name'] as String,
-      location: json['location'] as String,
-      description: HtmlParser.parse(json['description'] as String),
-      applyUrl: json['apply_url'] as String,
-      source: json['source'] as String,
-      postedAt: DateTime.parse(json['posted_at'] as String),
-      isSponsorshipAvailable: json['is_sponsorship_available'] as bool,
-      extractedSkills: List<String>.from(json['extracted_skills'] as List),
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
-      remoteOkId: json['remote_ok_id'] as String,
-      salary: json['salary'] as String,
-      tags: List<String>.from(json['tags'] as List),
+      id: (json['id'] ?? '').toString(),
+      title: (json['title'] ?? '').toString(),
+      companyName: (json['company_name'] ?? 'Unknown Company').toString(),
+      location: (json['location'] ?? 'Remote').toString(),
+      description: HtmlParser.parse((json['description'] ?? '').toString()),
+      applyUrl: (json['apply_url'] ?? '').toString(),
+      source: (json['source'] ?? '').toString(),
+      postedAt:
+          DateTime.tryParse((json['posted_at'] ?? '').toString()) ??
+          DateTime.now(),
+      isSponsorshipAvailable:
+          (json['is_sponsorship_available'] as bool?) ?? false,
+      extractedSkills: (json['extracted_skills'] is List)
+          ? List<String>.from(json['extracted_skills'] as List)
+          : <String>[],
+      createdAt:
+          DateTime.tryParse((json['created_at'] ?? '').toString()) ??
+          DateTime.now(),
+      updatedAt:
+          DateTime.tryParse((json['updated_at'] ?? '').toString()) ??
+          DateTime.now(),
+      remoteOkId: (json['remote_ok_id'] ?? '').toString(),
+      salary: (json['salary'] ?? '').toString(),
+      tags: (json['tags'] is List)
+          ? List<String>.from(json['tags'] as List)
+          : <String>[],
     );
   }
 

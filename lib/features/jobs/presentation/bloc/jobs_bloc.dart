@@ -50,7 +50,9 @@ class JobsBloc extends Bloc<JobsEvent, JobsState> {
   Future<void> _getJobs(GetJobsEvent event, Emitter<JobsState> emit) async {
     emit(JobLoadingState());
 
-    final result = await getJobs(GetJobsParams());
+    final result = await getJobs(
+      GetJobsParams(page: event.page, limit: event.limit),
+    );
 
     result.fold(
       (failure) {
@@ -76,20 +78,38 @@ class JobsBloc extends Bloc<JobsEvent, JobsState> {
   ) async {
     emit(JobLoadingState());
     final result = await getMatchedJobs(NoParams());
-    result.fold(
-      (failure) {
-        emit(
-          JobFetchingErrorState(
-            message: 'Failed to fetch jobs for you. Please try again later',
+    await result.fold<Future<void>>(
+      (failure) async {
+        // Fallback to all jobs when matched is empty/fails
+        final allResult = await getJobs(const GetJobsParams());
+        allResult.fold(
+          (_) async => emit(
+            JobFetchingErrorState(
+              message: 'Failed to fetch jobs for you. Please try again later',
+            ),
+          ),
+          (jobs) async => emit(
+            GotJobsState(
+              jobs: jobs.map((e) => JobModel.fromEntity(e)).toList(),
+            ),
           ),
         );
       },
-      (jobs) {
-        emit(
-          GotMatchedJobsState(
-            jobs: jobs.map((job) => JobModel.fromEntity(job)).toList(),
-          ),
-        );
+      (jobs) async {
+        final list = jobs.map((job) => JobModel.fromEntity(job)).toList();
+        if (list.isEmpty) {
+          final allResult = await getJobs(const GetJobsParams());
+          allResult.fold(
+            (_) async => emit(GotMatchedJobsState(jobs: list)),
+            (allJobs) async => emit(
+              GotJobsState(
+                jobs: allJobs.map((e) => JobModel.fromEntity(e)).toList(),
+              ),
+            ),
+          );
+        } else {
+          emit(GotMatchedJobsState(jobs: list));
+        }
       },
     );
   }
@@ -197,7 +217,10 @@ class JobsBloc extends Bloc<JobsEvent, JobsState> {
     );
   }
 
-  FutureOr<void> _getJobById(GetJobByIdEvent event, Emitter<JobsState> emit) async{
+  FutureOr<void> _getJobById(
+    GetJobByIdEvent event,
+    Emitter<JobsState> emit,
+  ) async {
     emit(JobLoadingState());
 
     final result = await getJobById(GetJobByIdParams(id: event.id));
@@ -206,15 +229,12 @@ class JobsBloc extends Bloc<JobsEvent, JobsState> {
       (failure) {
         emit(
           JobFetchingErrorState(
-            message:
-                'Failed to Load Job detail. Please try again later',
+            message: 'Failed to Load Job detail. Please try again later',
           ),
         );
       },
       (job) {
-        emit(
-          GotJobByIdState(job:JobModel.fromEntity(job) )
-        );
+        emit(GotJobByIdState(job: JobModel.fromEntity(job)));
       },
     );
   }
