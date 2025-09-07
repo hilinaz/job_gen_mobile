@@ -56,116 +56,141 @@ class _UserListScreenState extends State<UserListScreen> {
   Widget build(BuildContext context) {
     // Don't create a new UserManagementBloc - use the one from routes
     return BlocListener<UserManagementBloc, UserManagementState>(
-          // Listen for all user management events at the parent level
-          listenWhen: (previous, current) {
-            // Only listen for success or error states
-            return current is DeleteUserSuccess || 
-                   current is DeleteUserError || 
-                   current is UpdateUserRoleSuccess || 
-                   current is UpdateUserRoleError || 
-                   current is ToggleUserStatusSuccess || 
-                   current is ToggleUserStatusError;
-          },
-          listener: (context, state) {
-            developer.log('PARENT BlocListener: UserManagementBloc state changed: $state');
-            
-            // Handle success states with OPTIMISTIC UPDATES
-            if (state is DeleteUserSuccess) {
-              developer.log('🗑️ DELETE SUCCESS: User ${state.userId} deleted');
-              
-              // Show success notification
-              showCustomNotification(context, 'User deleted successfully', 'success');
-              
-              // CRITICAL: Apply optimistic update immediately, then refresh
-              context.read<UserListBloc>().add(OptimisticDeleteUserEvent(userId: state.userId));
-              
-              // Schedule a refresh to ensure data consistency
-              Future.delayed(const Duration(milliseconds: 100), () {
-                context.read<UserListBloc>().add(RefreshUsersEvent());
-              });
-              
-            } else if (state is UpdateUserRoleSuccess) {
-              developer.log('💼 ROLE SUCCESS: User ${state.userId} role updated to ${state.role}');
-              
-              // Show success notification
-              showCustomNotification(context, 'User role updated successfully', 'success');
-              
-              // CRITICAL: Apply optimistic update immediately, then refresh
-              context.read<UserListBloc>().add(
-                OptimisticUpdateUserRoleEvent(
-                  userId: state.userId,
-                  newRole: state.role,
-                ),
-              );
-              
-              // Schedule a refresh to ensure data consistency
-              Future.delayed(const Duration(milliseconds: 100), () {
-                context.read<UserListBloc>().add(RefreshUsersEvent());
-              });
-              
-            } else if (state is ToggleUserStatusSuccess) {
-              developer.log('🔎 STATUS SUCCESS: User ${state.userId} status toggled');
-              
-              // Show success notification
-              showCustomNotification(context, 'User status updated successfully', 'success');
-              
-              // CRITICAL: Just refresh the list since we don't know the new status
-              Future.delayed(const Duration(milliseconds: 100), () {
-                context.read<UserListBloc>().add(RefreshUsersEvent());
-              });
-              
-            // Handle error states
-            } else if (state is DeleteUserError || 
-                       state is UpdateUserRoleError || 
-                       state is ToggleUserStatusError) {
-              
-              String errorMessage = '';
-              if (state is DeleteUserError) {
-                errorMessage = 'Error deleting user: ${state.message}';
-                developer.log('🗑️ DELETE ERROR: ${state.message}');
-              } else if (state is UpdateUserRoleError) {
-                errorMessage = 'Error updating user role: ${state.message}';
-                developer.log('💼 ROLE ERROR: ${state.message}');
-              } else if (state is ToggleUserStatusError) {
-                errorMessage = 'Error toggling user status: ${state.message}';
-                developer.log('🔎 STATUS ERROR: ${state.message}');
-              }
-              
-              // Show error notification
-              showCustomNotification(context, errorMessage, 'error');
-              
-              // On error, refresh to ensure UI is in sync with backend
+      // Listen for all user management events at the parent level
+      listenWhen: (previous, current) {
+        // Only listen for success or error states
+        return current is DeleteUserSuccess ||
+            current is DeleteUserError ||
+            current is UpdateUserRoleSuccess ||
+            current is UpdateUserRoleError ||
+            current is ToggleUserStatusSuccess ||
+            current is ToggleUserStatusError;
+      },
+      listener: (context, state) {
+        developer.log(
+          'PARENT BlocListener: UserManagementBloc state changed: $state',
+        );
+
+        // Handle success states with OPTIMISTIC UPDATES
+        if (state is DeleteUserSuccess) {
+          developer.log('🗑️ DELETE SUCCESS: User ${state.userId} deleted');
+
+          // Show success notification
+          showCustomNotification(
+            context,
+            'User deleted successfully',
+            'success',
+          );
+
+          // CRITICAL: Apply optimistic update immediately, then refresh
+          context.read<UserListBloc>().add(
+            OptimisticDeleteUserEvent(userId: state.userId),
+          );
+
+          // Schedule a refresh to ensure data consistency
+          Future.delayed(const Duration(milliseconds: 100), () {
+            context.read<UserListBloc>().add(RefreshUsersEvent());
+          });
+        } else if (state is UpdateUserRoleSuccess) {
+          developer.log(
+            '💼 ROLE SUCCESS: User ${state.userId} role updated to ${state.role}',
+          );
+
+          // CRITICAL: Apply optimistic update immediately FIRST
+          context.read<UserListBloc>().add(
+            OptimisticUpdateUserRoleEvent(
+              userId: state.userId,
+              newRole: state.role,
+            ),
+          );
+
+          // Show success notification AFTER optimistic update
+          showCustomNotification(
+            context,
+            'User role updated successfully',
+            'success',
+          );
+
+          // Schedule a refresh to ensure data consistency (same as delete)
+          Future.delayed(const Duration(milliseconds: 100), () {
+            context.read<UserListBloc>().add(RefreshUsersEvent());
+          });
+        } else if (state is ToggleUserStatusSuccess) {
+          developer.log(
+            '🔎 STATUS SUCCESS: User ${state.userId} status toggled',
+          );
+
+          // CRITICAL: Apply optimistic update immediately FIRST
+          context.read<UserListBloc>().add(
+            OptimisticToggleUserStatusEvent(
+              userId: state.userId,
+              newStatus: state.newStatus,
+            ),
+          );
+
+          // Show success notification AFTER optimistic update
+          showCustomNotification(
+            context,
+            'User status updated successfully',
+            'success',
+          );
+
+          // Schedule a refresh to ensure data consistency (same as delete)
+          Future.delayed(const Duration(milliseconds: 100), () {
+            context.read<UserListBloc>().add(RefreshUsersEvent());
+          });
+
+          // Handle error states
+        } else if (state is DeleteUserError ||
+            state is UpdateUserRoleError ||
+            state is ToggleUserStatusError) {
+          String errorMessage = '';
+          if (state is DeleteUserError) {
+            errorMessage = 'Error deleting user: ${state.message}';
+            developer.log('🗑️ DELETE ERROR: ${state.message}');
+          } else if (state is UpdateUserRoleError) {
+            errorMessage = 'Error updating user role: ${state.message}';
+            developer.log('💼 ROLE ERROR: ${state.message}');
+          } else if (state is ToggleUserStatusError) {
+            errorMessage = 'Error toggling user status: ${state.message}';
+            developer.log('🔎 STATUS ERROR: ${state.message}');
+          }
+
+          // Show error notification
+          showCustomNotification(context, errorMessage, 'error');
+
+          // On error, refresh to ensure UI is in sync with backend
+          context.read<UserListBloc>().add(RefreshUsersEvent());
+        }
+      },
+      child: Scaffold(
+        backgroundColor: AdminColors.backgroundColor,
+        body: SafeArea(
+          child: RefreshIndicator(
+            onRefresh: () async {
               context.read<UserListBloc>().add(RefreshUsersEvent());
-            }
-          },
-          child: Scaffold(
-            backgroundColor: AdminColors.backgroundColor,
-            body: SafeArea(
-              child: RefreshIndicator(
-                onRefresh: () async {
-                  context.read<UserListBloc>().add(RefreshUsersEvent());
-                  return Future.delayed(const Duration(milliseconds: 500));
-                },
-                child: SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildHeader(),
-                        const SizedBox(height: 24),
-                        _buildSearchAndFilters(),
-                        const SizedBox(height: 16),
-                        _buildUserList(),
-                      ],
-                    ),
-                  ),
+              return Future.delayed(const Duration(milliseconds: 500));
+            },
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildHeader(),
+                    const SizedBox(height: 24),
+                    _buildSearchAndFilters(),
+                    const SizedBox(height: 16),
+                    _buildUserList(),
+                  ],
                 ),
               ),
             ),
           ),
-        );
+        ),
+      ),
+    );
   }
 
   Widget _buildHeader() {
@@ -420,7 +445,7 @@ class _UserListScreenState extends State<UserListScreen> {
     );
     try {
       context.read<UserManagementBloc>().add(
-        ToggleUserStatusEvent(userId: user.id),
+        ToggleUserStatusEvent(userId: user.id, currentStatus: user.isActive),
       );
       developer.log('ToggleUserStatusEvent dispatched successfully');
     } catch (e) {
@@ -443,7 +468,8 @@ class _UserListScreenState extends State<UserListScreen> {
     showDialog(
       context: context,
       builder: (dialogContext) => DeleteConfirmationModal(
-        user: user,
+        title: 'Delete User',
+        content: 'Are you sure you want to delete ${user.name} (${user.email})?',
         onConfirm: () {
           developer.log('Delete confirmed for user: ${user.id}');
           try {

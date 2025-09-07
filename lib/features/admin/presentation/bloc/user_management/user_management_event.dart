@@ -31,9 +31,10 @@ class UpdateUserRoleEvent extends UserManagementEvent {
 
 class ToggleUserStatusEvent extends UserManagementEvent {
   final String userId;
+  final bool currentStatus;
 
-  const ToggleUserStatusEvent({required this.userId});
+  const ToggleUserStatusEvent({required this.userId, required this.currentStatus});
 
   @override
-  List<Object> get props => [userId];
+  List<Object> get props => [userId, currentStatus];
 }

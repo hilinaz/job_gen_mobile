@@ -1,5 +1,6 @@
 import 'package:dartz/dartz.dart';
 import '../entities/user.dart';
+import '../entities/job.dart';
 import '../../../../core/error/failures.dart';
 
 /// Repository interface for admin operations
@@ -31,6 +32,42 @@ abstract class AdminRepository {
 
   /// Toggle a user's active status
   Future<Either<Failure, void>> toggleUserStatus(String userId);
+  
+  // Job Management Methods
+  
+  /// Get a paginated list of jobs
+  /// 
+  /// [page] - Page number (starting from 1)
+  /// [limit] - Number of items per page
+  /// [search] - Optional search term
+  /// [type] - Optional job type filter
+  /// [active] - Optional active status filter
+  /// [sortBy] - Optional field to sort by
+  /// [sortOrder] - Optional sort order ('asc' or 'desc')
+  Future<Either<Failure, PaginatedJobs>> getJobs({
+    required int page,
+    required int limit,
+    String? search,
+    String? type,
+    bool? active,
+    String? sortBy,
+    String? sortOrder,
+  });
+  
+  /// Create a new job
+  Future<Either<Failure, Job>> createJob(Job job);
+  
+  /// Update an existing job
+  Future<Either<Failure, Job>> updateJob(String jobId, Job job);
+  
+  /// Delete a job by ID
+  Future<Either<Failure, void>> deleteJob(String jobId);
+  
+  /// Toggle a job's active status
+  Future<Either<Failure, Job>> toggleJobStatus(String jobId, bool isActive);
+  
+  /// Trigger job aggregation from external sources
+  Future<Either<Failure, void>> triggerJobAggregation();
 }
 
 /// Class representing paginated users

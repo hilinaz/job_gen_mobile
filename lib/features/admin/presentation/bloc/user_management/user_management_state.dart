@@ -80,11 +80,12 @@ class ToggleUserStatusLoading extends UserManagementState {
 
 class ToggleUserStatusSuccess extends UserManagementState {
   final String userId;
+  final bool newStatus;
 
-  const ToggleUserStatusSuccess({required this.userId});
+  const ToggleUserStatusSuccess({required this.userId, required this.newStatus});
 
   @override
-  List<Object> get props => [userId];
+  List<Object> get props => [userId, newStatus];
 }
 
 class ToggleUserStatusError extends UserManagementState {

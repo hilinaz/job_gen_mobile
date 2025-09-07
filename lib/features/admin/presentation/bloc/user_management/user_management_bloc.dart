@@ -102,8 +102,9 @@ class UserManagementBloc extends Bloc<UserManagementEvent, UserManagementState> 
       },
       (_) {
         developer.log('UserManagementBloc: Toggle user status succeeded for userId: ${event.userId}');
-        emit(ToggleUserStatusSuccess(userId: event.userId));
-        developer.log('UserManagementBloc: Emitted ToggleUserStatusSuccess state');
+        final newStatus = !event.currentStatus; // Toggle the current status
+        emit(ToggleUserStatusSuccess(userId: event.userId, newStatus: newStatus));
+        developer.log('UserManagementBloc: Emitted ToggleUserStatusSuccess state with newStatus: $newStatus');
       },
     );
   }

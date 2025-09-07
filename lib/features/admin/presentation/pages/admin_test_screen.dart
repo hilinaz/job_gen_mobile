@@ -1371,7 +1371,8 @@ class _AdminTestScreenState extends State<AdminTestScreen> {
                         showDialog(
                           context: context,
                           builder: (context) => DeleteConfirmationModal(
-                            user: sampleUser,
+                            title: 'Delete User',
+                            content: 'Are you sure you want to delete ${sampleUser.name} (${sampleUser.email})?',
                             onConfirm: () {
                               showCustomNotification(
                                 context,

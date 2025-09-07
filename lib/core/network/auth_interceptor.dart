@@ -8,11 +8,17 @@ class AuthInterceptor extends Interceptor {
 
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
-    // Get stored access token (using same key as auth repository)
-    final accessToken = sharedPreferences.getString('ACCESS_TOKEN');
+    // Skip adding Authorization header for public endpoints
+    final publicEndpoints = ['/jobs', '/jobs/stats', '/jobs/sources', '/jobs/trending'];
+    final isPublicEndpoint = publicEndpoints.any((endpoint) => options.path.startsWith(endpoint));
     
-    if (accessToken != null && accessToken.isNotEmpty) {
-      options.headers['Authorization'] = 'Bearer $accessToken';
+    if (!isPublicEndpoint) {
+      // Get stored access token (using same key as auth repository)
+      final accessToken = sharedPreferences.getString('ACCESS_TOKEN');
+      
+      if (accessToken != null && accessToken.isNotEmpty) {
+        options.headers['Authorization'] = 'Bearer $accessToken';
+      }
     }
     
     super.onRequest(options, handler);

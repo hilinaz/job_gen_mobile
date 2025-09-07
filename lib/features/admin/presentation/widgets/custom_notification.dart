@@ -1,12 +1,49 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/admin_colors.dart';
 
+enum NotificationType {
+  success,
+  error,
+  warning,
+  info,
+}
+
+extension NotificationTypeExtension on NotificationType {
+  String get value {
+    switch (this) {
+      case NotificationType.success:
+        return 'success';
+      case NotificationType.error:
+        return 'error';
+      case NotificationType.warning:
+        return 'warning';
+      case NotificationType.info:
+        return 'info';
+    }
+  }
+}
+
 /// A custom notification widget that slides in from the right
 /// matching the web admin UI style
 class CustomNotification extends StatelessWidget {
   final String message;
   final String type; // 'success', 'error', 'warning', 'info'
   final VoidCallback onDismiss;
+  
+  /// Static method to show a notification
+  static void show({
+    required BuildContext context,
+    required String message,
+    required NotificationType type,
+    Duration? duration,
+  }) {
+    showCustomNotification(
+      context,
+      message,
+      type.value,
+      duration: duration,
+    );
+  }
 
   const CustomNotification({
     Key? key,

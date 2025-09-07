@@ -285,9 +285,6 @@ class UserListBloc extends Bloc<UserListEvent, UserListState> {
     OptimisticToggleUserStatusEvent event,
     Emitter<UserListState> emit,
   ) {
-    developer.log(
-      'UserListBloc: Optimistic toggle status for user ${event.userId} to ${event.newStatus}',
-    );
 
     if (state is UserListLoaded) {
       final currentState = state as UserListLoaded;
@@ -301,7 +298,7 @@ class UserListBloc extends Bloc<UserListEvent, UserListState> {
             role: user.role,
             isActive: event.newStatus,
             createdAt: user.createdAt,
-            updatedAt: DateTime.now(),
+            updatedAt: user.updatedAt,
           );
         }
         return user;
@@ -328,13 +325,6 @@ class UserListBloc extends Bloc<UserListEvent, UserListState> {
         ),
       );
 
-      developer.log(
-        'UserListBloc: Optimistic toggle status completed for user ${event.userId}',
-      );
-    } else {
-      developer.log(
-        'UserListBloc: Cannot perform optimistic toggle, state is not UserListLoaded',
-      );
     }
   }
 
@@ -342,9 +332,6 @@ class UserListBloc extends Bloc<UserListEvent, UserListState> {
     OptimisticUpdateUserRoleEvent event,
     Emitter<UserListState> emit,
   ) {
-    developer.log(
-      'UserListBloc: Optimistic update role for user ${event.userId} to ${event.newRole}',
-    );
 
     if (state is UserListLoaded) {
       final currentState = state as UserListLoaded;
@@ -358,7 +345,7 @@ class UserListBloc extends Bloc<UserListEvent, UserListState> {
             role: event.newRole,
             isActive: user.isActive,
             createdAt: user.createdAt,
-            updatedAt: DateTime.now(),
+            updatedAt: user.updatedAt,
           );
         }
         return user;
@@ -385,13 +372,6 @@ class UserListBloc extends Bloc<UserListEvent, UserListState> {
         ),
       );
 
-      developer.log(
-        'UserListBloc: Optimistic update role completed for user ${event.userId}',
-      );
-    } else {
-      developer.log(
-        'UserListBloc: Cannot perform optimistic role update, state is not UserListLoaded',
-      );
     }
   }
 }

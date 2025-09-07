@@ -186,10 +186,10 @@ class AdminDashboardScreen extends StatelessWidget {
             ),
             _buildMenuCard(
               context,
-              title: 'Job Listings',
+              title: 'Job Management',
               icon: Icons.work,
               color: AdminColors.notificationColors['warning']!,
-              onTap: () {},
+              onTap: () => Navigator.pushNamed(context, AdminRoutes.jobs),
             ),
             _buildMenuCard(
               context,
