@@ -28,6 +28,10 @@ import 'package:job_gen_mobile/features/admin/presentation/pages/job_form_screen
 import 'package:job_gen_mobile/features/admin/presentation/pages/job_details_screen.dart';
 
 import 'package:job_gen_mobile/core/widgets/admin_role_guard.dart';
+import 'package:job_gen_mobile/features/jobs/presentation/bloc/jobs_bloc.dart';
+import 'package:job_gen_mobile/features/jobs/presentation/pages/job_listing_page.dart';
+import 'package:job_gen_mobile/features/jobs/presentation/pages/job_detail_page.dart';
+import 'package:job_gen_mobile/features/jobs/presentation/pages/job_stats_page.dart';
 
 import 'injection_container.dart' as di;
 
@@ -110,6 +114,7 @@ class MyApp extends StatelessWidget {
         BlocProvider<JobManagementBloc>(
           create: (context) => di.sl<JobManagementBloc>(),
         ),
+        BlocProvider<JobsBloc>(create: (context) => di.sl<JobsBloc>()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -122,12 +127,12 @@ class MyApp extends StatelessWidget {
         ),
         initialRoute: '/',
         routes: {
+          //auth
           '/': (_) => const SplashScreen(),
           '/onboarding': (_) => const OnBoardingScreen(),
           '/sign_up': (_) => SignUpPage(),
           '/verify_email': (_) => VerifyEmailPage(),
           '/sign_in': (_) => SignInPage(),
-
           '/forgot_password': (_) => ForgotPasswordPage(),
           '/reset_password': (_) => ResetPasswordPage(),
           '/home': (_) => const HomeScreen(),
@@ -147,6 +152,11 @@ class MyApp extends StatelessWidget {
             final job = ModalRoute.of(context)!.settings.arguments as dynamic;
             return AdminRoleGuard(child: JobFormScreen(job: job));
           },
+
+          //jobs
+          '/job_listing': (_) => JobListingPage(),
+          '/job_detail': (_) => const JobDetailPage(),
+          '/job_stats': (_) => const JobStatsPage(),
         },
       ),
     );

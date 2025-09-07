@@ -165,6 +165,18 @@ class _UserListScreenState extends State<UserListScreen> {
       },
       child: Scaffold(
         backgroundColor: AdminColors.backgroundColor,
+        appBar: AppBar(
+          backgroundColor: AdminColors.primaryColor,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          title: const Text(
+            'User Management',
+            style: TextStyle(color: Colors.white),
+          ),
+          elevation: 0,
+        ),
         body: SafeArea(
           child: RefreshIndicator(
             onRefresh: () async {

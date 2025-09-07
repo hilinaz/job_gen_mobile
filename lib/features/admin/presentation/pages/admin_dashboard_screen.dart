@@ -1,14 +1,46 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/admin_colors.dart';
 import '../routes/admin_routes.dart';
+import '../bloc/user_list/user_list_bloc.dart';
+import '../bloc/user_list/user_list_event.dart';
+import '../bloc/user_list/user_list_state.dart';
+import '../bloc/job_list/job_list_bloc.dart';
+import '../bloc/job_list/job_list_event.dart';
+import '../bloc/job_list/job_list_state.dart';
 
-class AdminDashboardScreen extends StatelessWidget {
+class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({Key? key}) : super(key: key);
+
+  @override
+  State<AdminDashboardScreen> createState() => _AdminDashboardScreenState();
+}
+
+class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Load user and job data for stats - use a larger limit to ensure we get all data
+    context.read<UserListBloc>().add(const GetUsersEvent(page: 1, limit: 100));
+    context.read<JobListBloc>().add(const GetJobsEvent(page: 1, limit: 100));
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AdminColors.backgroundColor,
+      appBar: AppBar(
+        backgroundColor: AdminColors.primaryColor,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: const Text(
+          'Admin Dashboard',
+          style: TextStyle(color: Colors.white),
+        ),
+        elevation: 0,
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
@@ -72,20 +104,68 @@ class AdminDashboardScreen extends StatelessWidget {
   Widget _buildStatsCards(BuildContext context) {
     return Row(
       children: [
-        _buildStatCard(
-          context,
-          icon: Icons.people,
-          title: 'Total Users',
-          value: '1,234',
-          color: AdminColors.primaryColor,
+        // User stats card with real data
+        BlocBuilder<UserListBloc, UserListState>(
+          builder: (context, state) {
+            String userCount = '0';
+            bool isLoading = state is UserListLoading;
+            
+            if (state is UserListLoaded) {
+              // Log the data we're receiving to debug
+              debugPrint(
+                'UserListLoaded: total=${state.paginatedUsers.total}, users=${state.paginatedUsers.users.length}',
+              );
+              // Use users.length as fallback when total is 0
+              if (state.paginatedUsers.total == 0 && state.paginatedUsers.users.isNotEmpty) {
+                userCount = state.paginatedUsers.users.length.toString();
+                debugPrint('Using users.length ($userCount) as total count since API returned 0');
+              } else {
+                userCount = state.paginatedUsers.total.toString();
+              }
+            } else if (state is UserListError) {
+              debugPrint('UserListError: ${state.message}');
+            } else {
+              debugPrint('UserListState: $state');
+            }
+            
+            return _buildStatCard(
+              context,
+              icon: Icons.people,
+              title: 'Total Users',
+              value: userCount,
+              color: AdminColors.primaryColor,
+              isLoading: isLoading,
+            );
+          },
         ),
         const SizedBox(width: 16),
-        _buildStatCard(
-          context,
-          icon: Icons.work,
-          title: 'Active Jobs',
-          value: '567',
-          color: AdminColors.notificationColors['success']!,
+        // Job stats card with real data
+        BlocBuilder<JobListBloc, JobListState>(
+          builder: (context, state) {
+            String jobCount = '0';
+            bool isLoading = state is JobListLoading;
+
+            if (state is JobListLoaded) {
+              // Log the data we're receiving to debug
+              debugPrint(
+                'JobListLoaded: total=${state.paginatedJobs.total}, jobs=${state.paginatedJobs.jobs.length}',
+              );
+              jobCount = state.paginatedJobs.total.toString();
+            } else if (state is JobListError) {
+              debugPrint('JobListError: ${state.message}');
+            } else {
+              debugPrint('JobListState: $state');
+            }
+
+            return _buildStatCard(
+              context,
+              icon: Icons.work,
+              title: 'Active Jobs',
+              value: jobCount,
+              color: AdminColors.notificationColors['success']!,
+              isLoading: isLoading,
+            );
+          },
         ),
       ],
     );
@@ -97,6 +177,7 @@ class AdminDashboardScreen extends StatelessWidget {
     required String title,
     required String value,
     required Color color,
+    bool isLoading = false,
   }) {
     return Expanded(
       child: Container(
@@ -133,14 +214,23 @@ class AdminDashboardScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 4),
-            Text(
-              value,
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: AdminColors.textPrimaryColor,
-              ),
-            ),
+            isLoading
+                ? SizedBox(
+                    height: 24,
+                    width: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: color,
+                    ),
+                  )
+                : Text(
+                    value,
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: AdminColors.textPrimaryColor,
+                    ),
+                  ),
           ],
         ),
       ),
@@ -191,6 +281,8 @@ class AdminDashboardScreen extends StatelessWidget {
               color: AdminColors.notificationColors['warning']!,
               onTap: () => Navigator.pushNamed(context, AdminRoutes.jobs),
             ),
+            // Commented out for now - can be re-enabled when functionality is implemented
+            /*
             _buildMenuCard(
               context,
               title: 'Reports',
@@ -205,13 +297,7 @@ class AdminDashboardScreen extends StatelessWidget {
               color: AdminColors.notificationColors['info']!,
               onTap: () {},
             ),
-            _buildMenuCard(
-              context,
-              title: 'Test Screen',
-              icon: Icons.bug_report,
-              color: AdminColors.actionButtonColors['edit']!['text']!,
-              onTap: () => Navigator.pushNamed(context, '/admin/test'),
-            ),
+            */
           ],
         ),
       ],
