@@ -10,10 +10,14 @@ class Endpoints {
   static const logout          = '$basePath/auth/logout';
   static const changePassword  = '$basePath/auth/change-password';
 
-  static const uploadProfile   = '$basePath/files/upload/profile';
-  static const uploadDocument  = '$basePath/files/upload/document';
-  static const downloadFile    = '$basePath/files';
-  static const deleteFile      = '$basePath/files';
-  static const profilePictureMe= '$basePath/files/profile-picture/me';
-  static const profilePicture  = '$basePath/files/profile-picture';
+  static const uploadProfile  = '$basePath/files/upload/profile';
+  static const uploadDocument = '$basePath/files/upload/document';
+  static const myProfilePic   = '$basePath/files/profile-picture/me';
+  static String profilePicByUserId(String userId) =>
+      '$basePath/files/profile-picture/$userId';
+  static String downloadFile(String fileId) =>
+      '$basePath/files/$fileId';
+  static String deleteFile(String fileId) =>
+      '$basePath/files/$fileId';
+
 }

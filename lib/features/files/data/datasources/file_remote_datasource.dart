@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:http_parser/http_parser.dart';
+import '../../../../core/constants/endpoints.dart';
 import '../../../../core/network/envelope.dart';
 import '../models/jg_file_model.dart';
 
@@ -44,7 +45,7 @@ class FileRemoteDataSourceImpl implements FileRemoteDataSource {
     });
 
     final res = await dio.post(
-      '/files/upload/profile',
+      Endpoints.uploadProfile,
       data: formData,
       options: Options(contentType: 'multipart/form-data'),
     );
@@ -74,7 +75,7 @@ class FileRemoteDataSourceImpl implements FileRemoteDataSource {
     });
 
     final res = await dio.post(
-      '/files/upload/document',
+      Endpoints.uploadDocument,
       data: formData,
       options: Options(contentType: 'multipart/form-data'),
     );
@@ -91,7 +92,7 @@ class FileRemoteDataSourceImpl implements FileRemoteDataSource {
 
   @override
   Future<String> getDownloadUrl(String fileId) async {
-    final res = await dio.get('/files/$fileId');
+    final res = await dio.get(Endpoints.downloadFile(fileId));
     final envelope = ApiEnvelope.fromJson(res.data, (d) => d?.toString() ?? '');
     if (envelope.data == null) {
       throw Exception(envelope.error?.message ?? 'Download URL fetch failed');
@@ -101,7 +102,7 @@ class FileRemoteDataSourceImpl implements FileRemoteDataSource {
 
   @override
   Future<String> getMyProfilePictureUrl() async {
-    final res = await dio.get('/files/profile-picture/me');
+    final res = await dio.get(Endpoints.myProfilePic);
     final envelope = ApiEnvelope.fromJson(res.data, (d) => d?.toString() ?? '');
     if (envelope.data == null) {
       throw Exception(envelope.error?.message ?? 'Profile picture fetch failed');
@@ -111,7 +112,7 @@ class FileRemoteDataSourceImpl implements FileRemoteDataSource {
 
   @override
   Future<String> getProfilePictureUrl(String userId) async {
-    final res = await dio.get('/files/profile-picture/$userId');
+    final res = await dio.get(Endpoints.profilePicByUserId(userId));
     final envelope = ApiEnvelope.fromJson(res.data, (d) => d?.toString() ?? '');
     if (envelope.data == null) {
       throw Exception(envelope.error?.message ?? 'Profile picture fetch failed');
@@ -121,7 +122,7 @@ class FileRemoteDataSourceImpl implements FileRemoteDataSource {
 
   @override
   Future<void> deleteFile(String fileId) async {
-    final res = await dio.delete('/files/$fileId');
+    final res = await dio.delete(Endpoints.deleteFile(fileId));
     if (res.statusCode != 200) {
       throw Exception('Failed to delete file');
     }
