@@ -48,6 +48,8 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
       try {
         // First get the current profile to merge with updates
         final currentProfile = await remoteDataSource.getUserProfile();
+        
+        // Create a new UserProfileModel with the updated fields
         final updatedProfileModel = UserProfileModel(
           id: currentProfile.id,
           username: currentProfile.username,
@@ -57,16 +59,26 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
           skills: skills ?? currentProfile.skills,
           experienceYears: experienceYears ?? currentProfile.experienceYears,
           location: location ?? currentProfile.location,
+          phoneNumber: phoneNumber ?? currentProfile.phoneNumber,
+          // Ensure we use the new profile picture if provided, otherwise keep the current one
           profilePicture: profilePicture ?? currentProfile.profilePicture,
           active: currentProfile.active,
         );
 
+        print('Updating profile with data: ${updatedProfileModel.toJson()}');
+        
         final updatedProfile = await remoteDataSource.updateUserProfile(
           updatedProfileModel,
         );
+        
+        print('Successfully updated profile. New profile: $updatedProfile');
         return Right(updatedProfile);
       } on ServerException catch (e) {
+        print('Error updating profile: ${e.message}');
         return Left(ServerFailure(e.message));
+      } catch (e) {
+        print('Unexpected error updating profile: $e');
+        return Left(ServerFailure('An unexpected error occurred'));
       }
     } else {
       return Left(NetworkFailure('No internet connection'));
@@ -81,68 +93,6 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
         return const Right(null);
       } on ServerException catch (e) {
         return Left(ServerFailure(e.message));
-      }
-    } else {
-      return Left(NetworkFailure('No internet connection'));
-    }
-  }
-
-  @override
-  Future<Either<Failure, void>> uploadProfilePicture() async {
-    if (await networkInfo.isConnected) {
-      try {
-        // The actual file upload should be handled by the use case
-        // which will create the FormData and call this method
-        return const Right(null);
-      } on ServerException catch (e) {
-        return Left(ServerFailure(e.message));
-      }
-    } else {
-      return Left(NetworkFailure('No internet connection'));
-    }
-  }
-
-  @override
-  Future<Either<Failure, String>> updateProfilePicture(File file) async {
-    if (await networkInfo.isConnected) {
-      try {
-        // The actual file upload should be handled by the use case
-        // which will create the FormData and call this method
-        return const Right('');
-      } on ServerException catch (e) {
-        return Left(ServerFailure(e.message));
-      }
-    } else {
-      return Left(NetworkFailure('No internet connection'));
-    }
-  }
-
-  @override
-  Future<Either<Failure, void>> deleteProfilePicture() async {
-    if (await networkInfo.isConnected) {
-      try {
-        await remoteDataSource.deleteProfilePicture();
-        return const Right(null);
-      } on ServerException catch (e) {
-        return Left(ServerFailure(e.message));
-      }
-    } else {
-      return Left(NetworkFailure('No internet connection'));
-    }
-  }
-
-  @override
-  Future<Either<Failure, Uint8List>> getProfilePicture() async {
-    if (await networkInfo.isConnected) {
-      try {
-        final imageData = await remoteDataSource.getProfilePicture();
-        return Right(imageData);
-      } on ServerException catch (e) {
-        return Left(ServerFailure(e.message));
-      } on DioError catch (e) {
-        return Left(
-          NetworkFailure(e.message ?? 'Failed to get profile picture'),
-        );
       }
     } else {
       return Left(NetworkFailure('No internet connection'));

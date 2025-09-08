@@ -2,9 +2,6 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
 import 'package:http/http.dart' as http;
-import 'package:job_gen_mobile/features/user_profile/domain/usecases/user_profile/delete_profile_picture.dart';
-import 'package:job_gen_mobile/features/user_profile/domain/usecases/user_profile/get_profile_picture.dart';
-import 'package:job_gen_mobile/features/user_profile/domain/usecases/user_profile/update_profile_picture.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // Core
@@ -16,10 +13,13 @@ import 'package:job_gen_mobile/core/network/auth_interceptor.dart';
 import 'package:job_gen_mobile/features/user_profile/data/datasource/user_profile_remote_data_source.dart';
 import 'package:job_gen_mobile/features/user_profile/data/repositories/user_profile_repository_impl.dart';
 import 'package:job_gen_mobile/features/user_profile/domain/repositories/user_profile_repository.dart';
-import 'package:job_gen_mobile/features/user_profile/domain/usecases/user_profile/delete_account.dart';
 import 'package:job_gen_mobile/features/user_profile/domain/usecases/user_profile/get_user_profile.dart';
 import 'package:job_gen_mobile/features/user_profile/domain/usecases/user_profile/update_user_profile.dart';
+import 'package:job_gen_mobile/features/user_profile/domain/usecases/user_profile/delete_account.dart';
 import 'package:job_gen_mobile/features/user_profile/presentation/bloc/user_profile_bloc.dart';
+
+// Files Feature
+import 'package:job_gen_mobile/features/files/files_injection_container.dart';
 
 // Export use cases for easier access
 
@@ -30,6 +30,7 @@ final GetIt sl = GetIt.instance;
 Future<void> init() async {
   await _initCore();
   await _initUserProfileFeature();
+  await sl.registerFilesFeature();
 }
 
 /// Initialize core dependencies
@@ -49,10 +50,20 @@ Future<void> _initCore() async {
       ),
     );
 
-    // Attach auth interceptor to inject the Bearer token from SharedPreferences
+    // Get token from environment variables or SharedPreferences
+    final token = const String.fromEnvironment('JWT_TOKEN');
+
+    // Attach auth interceptor with token from environment or fallback to SharedPreferences
     dio.interceptors.add(
-      AuthInterceptor(sharedPreferences: sl<SharedPreferences>()),
+      token.isNotEmpty
+          ? AuthInterceptor(token: token)
+          : AuthInterceptor(sharedPreferences: sl<SharedPreferences>()),
     );
+
+    // Log the token for debugging (first 4 and last 4 characters)
+    if (token.isNotEmpty) {
+      print('🔑 Using JWT token: ${token.substring(0, 4)}...${token.substring(token.length - 4)}');
+    }
 
     // Optional: log requests/responses during development
     dio.interceptors.add(
@@ -103,24 +114,12 @@ Future<void> _initUserProfileFeature() async {
   sl.registerLazySingleton<UpdateUserProfile>(() => UpdateUserProfile(sl()));
   sl.registerLazySingleton<DeleteAccount>(() => DeleteAccount(sl()));
 
-  // Profile picture use cases
-  sl.registerLazySingleton<GetProfilePicture>(() => GetProfilePicture(sl()));
-  sl.registerLazySingleton<UpdateProfilePicture>(
-    () => UpdateProfilePicture(sl()),
-  );
-  sl.registerLazySingleton<DeleteProfilePicture>(
-    () => DeleteProfilePicture(sl()),
-  );
-
   // Bloc
   sl.registerFactory<UserProfileBloc>(
     () => UserProfileBloc(
       getUserProfile: sl(),
       updateUserProfile: sl(),
       deleteAccount: sl(),
-      getProfilePicture: sl(),
-      updateProfilePicture: sl(),
-      deleteProfilePicture: sl(),
     ),
   );
 }

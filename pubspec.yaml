@@ -19,6 +19,7 @@ dependencies:
   country_state_city_pro: ^0.0.6
   country_picker: ^2.0.0 
   image_picker: ^1.0.4
+  file_picker: ^10.3.0
 
   
   # Functional programming and error handling
@@ -29,12 +30,17 @@ dependencies:
   http: ^1.2.0
 
   # Local storage
-  shared_preferences: ^2.2.2
+  shared_preferences: ^2.5.3
   bloc: ^9.0.0
   syncfusion_flutter_pdfviewer: ^31.1.17
 
   build_runner: ^2.4.6
   build_runner_core: ^7.1.1
+  logger: ^2.6.1
+  open_file: ^3.5.10
+  path_provider: ^2.1.5
+  universal_html: ^2.2.1
+  url_launcher: ^6.2.5
 
 dev_dependencies:
   flutter_test:
@@ -48,4 +54,3 @@ flutter:
 
   assets:
     - assets/
-    

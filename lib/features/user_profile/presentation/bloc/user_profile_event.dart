@@ -22,16 +22,3 @@ class UpdateUserProfileEvent extends UserProfileEvent {
 }
 
 class DeleteAccountEvent extends UserProfileEvent {}
-
-class DeleteProfilePictureEvent extends UserProfileEvent {}
-
-class GetProfilePictureEvent extends UserProfileEvent {}
-
-class DownloadProfilePictureEvent extends UserProfileEvent {
-  final String? userId;
-
-  const DownloadProfilePictureEvent({this.userId});
-
-  @override
-  List<Object> get props => [if (userId != null) userId!];
-}

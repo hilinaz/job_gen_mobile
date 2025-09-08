@@ -16,12 +16,16 @@ class UserProfileModel extends UserProfile {
   });
 
   factory UserProfileModel.fromJson(Map<String, dynamic> json) {
-    String _asString(dynamic v, {String fallback = ''}) =>
-        v == null ? fallback : v.toString();
+    String _asString(dynamic v, {String fallback = ''}) {
+      if (v == null) return fallback;
+      if (v is String) return v;
+      return v.toString();
+    }
 
     int? _asInt(dynamic v) {
       if (v == null) return null;
       if (v is int) return v;
+      if (v is double) return v.toInt();
       return int.tryParse(v.toString());
     }
 
@@ -33,30 +37,81 @@ class UserProfileModel extends UserProfile {
       return <String>[];
     }
 
-    return UserProfileModel(
-      id: _asString(json['id']),
-      username: _asString(json['username']),
-      email: _asString(json['email']),
-      fullName: _asString(json['full_name']),
-      bio: json['bio']?.toString(),
-      skills: _asStringList(json['skills']),
-      experienceYears: _asInt(json['experience_years']),
-      location: json['location']?.toString(),
-      phoneNumber: json['phone_number']?.toString(),
-      profilePicture: json['profile_picture']?.toString(),
-      active: json['active'] == true || json['active'] == 1 || json['active'] == 'true',
-    );
+    try {
+      // Debug log the incoming JSON
+      print('Parsing UserProfileModel from JSON: $json');
+      
+      // Extract user object if it exists at the root level
+      final userData = json['user'] is Map<String, dynamic> 
+          ? json['user'] as Map<String, dynamic> 
+          : json;
+
+      final profile = UserProfileModel(
+        id: _asString(userData['id']),
+        username: _asString(userData['username']),
+        email: _asString(userData['email']),
+        fullName: _asString(userData['full_name']),
+        bio: userData['bio']?.toString(),
+        skills: _asStringList(userData['skills']),
+        experienceYears: _asInt(userData['experience_years']),
+        location: userData['location']?.toString(),
+        phoneNumber: userData['phone_number']?.toString(),
+        profilePicture: userData['profile_picture']?.toString(),
+        active: userData['is_active'] == true || 
+                userData['active'] == true || 
+                userData['is_active'] == 1 || 
+                userData['active'] == 1 ||
+                userData['is_active'] == 'true' ||
+                userData['active'] == 'true',
+      );
+      
+      print('Successfully parsed UserProfileModel: $profile');
+      return profile;
+    } catch (e) {
+      print('Error parsing UserProfileModel: $e');
+      rethrow;
+    }
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'full_name': fullName,
-      'bio': bio,
-      'skills': skills,
-      'experience_years': experienceYears,
-      'location': location,
-      'phone_number': phoneNumber,
-      'profile_picture': profilePicture,
+      'user': {
+        'full_name': fullName,
+        'bio': bio,
+        'skills': skills,
+        'experience_years': experienceYears,
+        'location': location,
+        'phone_number': phoneNumber,
+        'profile_picture': profilePicture,
+      },
     };
+  }
+
+  UserProfileModel copyWith({
+    String? id,
+    String? username,
+    String? email,
+    String? fullName,
+    String? bio,
+    List<String>? skills,
+    int? experienceYears,
+    String? location,
+    String? phoneNumber,
+    String? profilePicture,
+    bool? active,
+  }) {
+    return UserProfileModel(
+      id: id ?? this.id,
+      username: username ?? this.username,
+      email: email ?? this.email,
+      fullName: fullName ?? this.fullName,
+      bio: bio ?? this.bio,
+      skills: skills ?? this.skills,
+      experienceYears: experienceYears ?? this.experienceYears,
+      location: location ?? this.location,
+      phoneNumber: phoneNumber ?? this.phoneNumber,
+      profilePicture: profilePicture ?? this.profilePicture,
+      active: active ?? this.active,
+    );
   }
 }

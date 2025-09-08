@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:country_picker/country_picker.dart' as cp;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class PreferedLocationCard extends StatefulWidget {
   const PreferedLocationCard({super.key});
@@ -13,6 +14,92 @@ class _PreferedLocationCardState extends State<PreferedLocationCard> {
   String selectedState = '';
   String selectedCity = '';
   String selectedJobType = 'Remote';
+
+  final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedPreferences();
+  }
+
+  // Load saved preferences from SharedPreferences
+  Future<void> _loadSavedPreferences() async {
+    final SharedPreferences prefs = await _prefs;
+
+    setState(() {
+      selectedJobType = prefs.getString('jobType') ?? 'Remote';
+      selectedState = prefs.getString('state') ?? '';
+      selectedCity = prefs.getString('city') ?? '';
+
+      final countryCode = prefs.getString('countryCode');
+      final countryName = prefs.getString('countryName');
+      if (countryCode != null && countryName != null) {
+        selectedCountry = cp.Country(
+          countryCode: countryCode,
+          name: countryName,
+          phoneCode: prefs.getString('phoneCode') ?? '',
+          e164Sc: int.tryParse(prefs.getString('e164Sc') ?? '0') ?? 0,
+          geographic: prefs.getString('geographic') == 'true',
+          level: int.tryParse(prefs.getString('level') ?? '0') ?? 0,
+          example: prefs.getString('example') ?? '',
+          displayName: prefs.getString('displayName') ?? '',
+          displayNameNoCountryCode:
+              prefs.getString('displayNameNoCountryCode') ?? '',
+          e164Key: prefs.getString('e164Key') ?? '',
+        );
+      }
+    });
+  }
+
+  // Save preferences to SharedPreferences
+  Future<void> _savePreferences() async {
+    final SharedPreferences prefs = await _prefs;
+
+    await prefs.setString('jobType', selectedJobType);
+    await prefs.setString('state', selectedState);
+    await prefs.setString('city', selectedCity);
+
+    if (selectedCountry != null) {
+      await prefs.setString('countryCode', selectedCountry!.countryCode);
+      await prefs.setString('countryName', selectedCountry!.name);
+      await prefs.setString('phoneCode', selectedCountry!.phoneCode);
+      await prefs.setString('e164Sc', selectedCountry!.e164Sc.toString());
+      await prefs.setString(
+        'geographic',
+        selectedCountry!.geographic.toString(),
+      );
+      await prefs.setString('level', selectedCountry!.level.toString());
+      await prefs.setString('example', selectedCountry!.example);
+      await prefs.setString('displayName', selectedCountry!.displayName);
+      await prefs.setString(
+        'displayNameNoCountryCode',
+        selectedCountry!.displayNameNoCountryCode,
+      );
+      await prefs.setString('e164Key', selectedCountry!.e164Key);
+    } else {
+      await prefs.remove('countryCode');
+      await prefs.remove('countryName');
+    }
+  }
+
+  // Clear all saved preferences
+  Future<void> _clearPreferences() async {
+    final SharedPreferences prefs = await _prefs;
+
+    await prefs.remove('jobType');
+    await prefs.remove('state');
+    await prefs.remove('city');
+    await prefs.remove('countryCode');
+    await prefs.remove('countryName');
+
+    setState(() {
+      selectedJobType = 'Remote';
+      selectedState = '';
+      selectedCity = '';
+      selectedCountry = null;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,13 +124,24 @@ class _PreferedLocationCardState extends State<PreferedLocationCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Preferred Location',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 22,
-              color: Colors.teal[800],
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Preferred Location',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 22,
+                  color: Colors.teal[800],
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.delete_outline, size: 22),
+                color: Colors.grey[600],
+                onPressed: _clearPreferences,
+                tooltip: 'Clear all preferences',
+              ),
+            ],
           ),
           const SizedBox(height: 16),
 
@@ -127,9 +225,9 @@ class _PreferedLocationCardState extends State<PreferedLocationCard> {
         const SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
-            color: Colors.teal[50],
+            color: Colors.white,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.teal[200]!, width: 1.5),
+            border: Border.all(color: Colors.grey[300]!, width: 1.5),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: DropdownButton<String>(
@@ -142,7 +240,7 @@ class _PreferedLocationCardState extends State<PreferedLocationCard> {
                   option,
                   style: TextStyle(
                     fontSize: 16,
-                    color: Colors.teal[800],
+                    color: Colors.grey[800],
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -151,18 +249,19 @@ class _PreferedLocationCardState extends State<PreferedLocationCard> {
             onChanged: (String? newValue) {
               setState(() {
                 selectedJobType = newValue!;
+                _savePreferences(); // Save when changed
               });
             },
             underline: const SizedBox(),
             icon: Icon(
               Icons.arrow_drop_down,
-              color: Colors.teal[700],
+              color: Colors.grey[600],
               size: 28,
             ),
-            dropdownColor: Colors.teal[50],
+            dropdownColor: Colors.white,
             borderRadius: BorderRadius.circular(12),
             elevation: 2,
-            style: TextStyle(color: Colors.teal[800], fontSize: 16),
+            style: TextStyle(color: Colors.grey[800], fontSize: 16),
           ),
         ),
       ],
@@ -182,7 +281,7 @@ class _PreferedLocationCardState extends State<PreferedLocationCard> {
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w500,
-            color: Colors.teal[800],
+            color: Colors.grey[700],
           ),
         ),
         const SizedBox(height: 8),
@@ -191,9 +290,9 @@ class _PreferedLocationCardState extends State<PreferedLocationCard> {
           child: Container(
             width: double.infinity,
             decoration: BoxDecoration(
-              color: Colors.teal[50],
+              color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.teal[200]!, width: 1.5),
+              border: Border.all(color: Colors.grey[300]!, width: 1.5),
             ),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             child: Row(
@@ -205,12 +304,12 @@ class _PreferedLocationCardState extends State<PreferedLocationCard> {
                       fontSize: 16,
                       color: value.isEmpty
                           ? Colors.grey[500]
-                          : Colors.teal[800],
+                          : Colors.grey[800],
                       fontWeight: FontWeight.w500,
                     ),
                   ),
                 ),
-                Icon(Icons.arrow_drop_down, color: Colors.teal[700], size: 28),
+                Icon(Icons.arrow_drop_down, color: Colors.grey[600], size: 28),
               ],
             ),
           ),
@@ -227,6 +326,7 @@ class _PreferedLocationCardState extends State<PreferedLocationCard> {
           selectedCountry = country;
           selectedState = '';
           selectedCity = '';
+          _savePreferences(); // Save when changed
         });
       },
     );
@@ -247,9 +347,9 @@ class _PreferedLocationCardState extends State<PreferedLocationCard> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (BuildContext context) {
-        // Since the country_picker package doesn't provide states,
-        // we'll show a text input for the user to enter their state
-        final TextEditingController controller = TextEditingController();
+        final TextEditingController controller = TextEditingController(
+          text: selectedState,
+        );
 
         return Container(
           padding: const EdgeInsets.all(20.0),
@@ -265,7 +365,7 @@ class _PreferedLocationCardState extends State<PreferedLocationCard> {
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: Colors.teal[800],
+                      color: Colors.grey[800],
                     ),
                   ),
                   IconButton(
@@ -286,7 +386,14 @@ class _PreferedLocationCardState extends State<PreferedLocationCard> {
                           hintText: 'Enter your state/province',
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey[300]!),
                           ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey[400]!),
+                          ),
+                          filled: true,
+                          fillColor: Colors.white,
                         ),
                       ),
                     ),
@@ -297,12 +404,13 @@ class _PreferedLocationCardState extends State<PreferedLocationCard> {
                           setState(() {
                             selectedState = controller.text.trim();
                             selectedCity = '';
+                            _savePreferences(); // Save when changed
                           });
                           Navigator.pop(context);
                         }
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.teal,
+                        backgroundColor: Colors.grey[800],
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -332,55 +440,87 @@ class _PreferedLocationCardState extends State<PreferedLocationCard> {
       return;
     }
 
-    // This is a simplified version - you'll need to replace this with actual city data
-    // from your API or data source
-    final List<String> cities = [
-      'New York',
-      'Los Angeles',
-      'Chicago',
-      'Houston',
-      'Phoenix',
-    ];
-
-    showDialog(
+    showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (BuildContext context) {
-        return Dialog(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Select City',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.teal[800],
+        final TextEditingController controller = TextEditingController(
+          text: selectedCity,
+        );
+
+        return Container(
+          padding: const EdgeInsets.all(20.0),
+          height: MediaQuery.of(context).size.height * 0.4,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Enter City',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey[800],
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: TextField(
+                  controller: controller,
+                  decoration: InputDecoration(
+                    hintText: 'Enter your city',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey[300]!),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey[400]!),
+                    ),
+                    filled: true,
+                    fillColor: Colors.white,
                   ),
                 ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.maxFinite,
-                  height: 300,
-                  child: ListView.builder(
-                    itemCount: cities.length,
-                    itemBuilder: (context, index) {
-                      return ListTile(
-                        title: Text(cities[index]),
-                        onTap: () {
-                          setState(() {
-                            selectedCity = cities[index];
-                          });
-                          Navigator.pop(context);
-                        },
-                      );
-                    },
+              ),
+              const SizedBox(height: 20),
+              Center(
+                child: ElevatedButton(
+                  onPressed: () {
+                    if (controller.text.trim().isNotEmpty) {
+                      setState(() {
+                        selectedCity = controller.text.trim();
+                        _savePreferences(); // Save when changed
+                      });
+                      Navigator.pop(context);
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.grey[800],
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 12,
+                    ),
                   ),
+                  child: const Text('Save City'),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         );
       },

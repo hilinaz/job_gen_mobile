@@ -9,12 +9,6 @@ abstract class UserProfileRemoteDataSource {
   Future<UserProfileModel> getUserProfile();
   Future<UserProfileModel> updateUserProfile(UserProfileModel userProfile);
   Future<void> deleteAccount();
-
-  // Profile picture methods
-  Future<void> uploadProfilePicture(FormData formData);
-  Future<void> updateProfilePicture(FormData formData);
-  Future<void> deleteProfilePicture();
-  Future<Uint8List> getProfilePicture();
 }
 
 class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
@@ -48,21 +42,69 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
     UserProfileModel userProfile,
   ) async {
     try {
+      // Create a complete request data object with all fields
+      // Always include all fields, even if they haven't changed
+      final requestData = {
+        'full_name': userProfile.fullName,
+        'bio': userProfile.bio ?? '', // Send empty string if null
+        'skills': userProfile.skills,
+        'experience_years': userProfile.experienceYears,
+        'location': userProfile.location ?? '',
+        'phone_number': userProfile.phoneNumber ?? '',
+        'profile_picture': userProfile.profilePicture ?? '',
+      };
+
+      print('Sending update profile request to: ${Endpoints.updateProfile}');
+      print('Complete request data: $requestData');
+
       final response = await dio.put(
         Endpoints.updateProfile,
-        data: userProfile.toJson(),
+        data: requestData,
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+          validateStatus: (status) =>
+              status! < 500, // Accept all status codes < 500
+        ),
       );
 
+      print('Update profile response status: ${response.statusCode}');
+      print('Raw response data: ${response.data}');
+
       if (response.statusCode == 200) {
-        final data = response.data['data'];
-        final payload = (data is Map<String, dynamic> && data['user'] != null)
+        // The response might be in data['data'] or directly in the response
+        final responseData = response.data is Map ? response.data : {};
+        final data = responseData['data'] ?? responseData;
+
+        if (data == null) {
+          throw const ServerException('Empty response from server');
+        }
+
+        print('Processing response data: $data');
+
+        // Handle case where the user data might be nested under 'user' key
+        final userData = data is Map && data['user'] != null
             ? data['user'] as Map<String, dynamic>
-            : (data as Map<String, dynamic>);
-        return UserProfileModel.fromJson(payload);
+            : data as Map<String, dynamic>;
+
+        print('Extracted user data: $userData');
+
+        // Create the updated profile from the response
+        final updatedProfile = UserProfileModel.fromJson(userData);
+        print('Successfully created updated profile: $updatedProfile');
+
+        return updatedProfile;
       } else {
-        throw ServerException(
-          response.data['message'] ?? 'Failed to update profile',
-        );
+        // Handle error response
+        final errorMessage = response.data is Map
+            ? response.data['message']?.toString() ??
+                  response.data['error']?.toString() ??
+                  'Failed to update profile'
+            : 'Failed to update profile (status: ${response.statusCode})';
+
+        throw ServerException(errorMessage);
       }
     } on DioException catch (e) {
       throw ServerException(e.response?.data['message'] ?? 'Network error');
@@ -81,85 +123,6 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
       }
     } on DioException catch (e) {
       throw ServerException(e.response?.data['message'] ?? 'Network error');
-    }
-  }
-
-  @override
-  Future<void> uploadProfilePicture(FormData formData) async {
-    try {
-      final response = await dio.post(
-        Endpoints.uploadProfilePicture,
-        data: formData,
-        options: Options(headers: {'Content-Type': 'multipart/form-data'}),
-      );
-
-      if (response.statusCode != 200) {
-        throw ServerException(
-          response.data['message'] ?? 'Failed to upload profile picture',
-        );
-      }
-    } on DioException catch (e) {
-      throw ServerException(e.response?.data['message'] ?? 'Network error');
-    }
-  }
-
-  @override
-  Future<void> updateProfilePicture(FormData formData) async {
-    try {
-      final response = await dio.post(
-        Endpoints.updateProfilePicture,
-        data: formData,
-        options: Options(headers: {'Content-Type': 'multipart/form-data'}),
-      );
-
-      if (response.statusCode != 200) {
-        throw ServerException(
-          response.data['message'] ?? 'Failed to update profile picture',
-        );
-      }
-    } on DioException catch (e) {
-      throw ServerException(e.response?.data['message'] ?? 'Network error');
-    }
-  }
-
-  @override
-  Future<void> deleteProfilePicture() async {
-    try {
-      final response = await dio.delete(Endpoints.deleteProfilePicture);
-
-      if (response.statusCode != 200) {
-        throw ServerException(
-          response.data['message'] ?? 'Failed to delete profile picture',
-        );
-      }
-    } on DioException catch (e) {
-      throw ServerException(e.response?.data['message'] ?? 'Network error');
-    }
-  }
-
-  @override
-  Future<Uint8List> getProfilePicture() async {
-    try {
-      final response = await dio.get(
-        '${Endpoints.baseUrl}${Endpoints.basePath}/files/profile-picture/me',
-        options: Options(
-          responseType: ResponseType.bytes,
-          headers: {'Accept': 'image/*'},
-        ),
-      );
-
-      if (response.statusCode == 200) {
-        return Uint8List.fromList(response.data);
-      } else {
-        throw ServerException(
-          response.data?['message']?.toString() ??
-              'Failed to get profile picture',
-        );
-      }
-    } on DioException catch (e) {
-      throw ServerException(
-        e.response?.data?['message']?.toString() ?? 'Network error',
-      );
     }
   }
 }

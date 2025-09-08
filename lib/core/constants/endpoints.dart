@@ -29,20 +29,14 @@ class Endpoints {
   static String get downloadCV => '$baseUrl$basePath/files/:id';
   static String get deleteCV => '$baseUrl$basePath/files/:id';
 
-  // profile picture photo (files routes)
-  static String get uploadProfilePicture =>
-      '$baseUrl$basePath/files/upload/profile';
-  // No dedicated update route on backend; reuse upload to replace the picture
-  static String get updateProfilePicture =>
-      '$baseUrl$basePath/files/upload/profile';
-  // Get specific user's profile picture by id
-  static String get downloadProfilePictureById =>
-      '$baseUrl$basePath/files/profile-picture/:id';
-  static String get downloadProfilePicture =>
+  static String get uploadProfile => '$baseUrl$basePath/files/upload/profile';
+  static String get uploadDocument => '$baseUrl$basePath/files/upload/document';
+  static String get myProfilePic =>
       '$baseUrl$basePath/files/profile-picture/me';
-  // Alias for clarity
-  static String get getMyProfilePicture =>
-      '$baseUrl$basePath/files/profile-picture/me';
-  static String get deleteProfilePicture =>
-      '$baseUrl$basePath/files/profile-picture/me';
+  static String profilePicByUserId(String userId) =>
+      '$basePath/files/profile-picture/$userId';
+  static String downloadFile(String fileId) =>
+      '$baseUrl$basePath/files/$fileId';
+  static String deleteFile(String fileId) => '$baseUrl$basePath/files/$fileId';
+  static String get files => '$baseUrl$basePath/files';
 }

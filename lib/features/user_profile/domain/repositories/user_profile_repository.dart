@@ -17,15 +17,4 @@ abstract class UserProfileRepository {
     List<String>? skills,
   });
   Future<Either<Failure, void>> deleteUserAccount();
-
-  // profile picture
-  Future<Either<Failure, void>> uploadProfilePicture();
-  Future<Either<Failure, String>> updateProfilePicture(File file);
-  Future<Either<Failure, void>> deleteProfilePicture();
-  Future<Either<Failure, Uint8List>> getProfilePicture();
-
-  // CV
-  // Future<Either<Failure, void>> uploadCV();
-  // Future<Either<Failure, void>> deleteCV();
-  // Future<Either<Failure, void>> updateCV();
 }
