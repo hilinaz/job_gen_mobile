@@ -230,4 +230,35 @@ Future<void> init() async {
 
   // Files Feature
   await sl.registerFilesFeature();
+
+
+  // CHAT
+  // Data source
+  sl.registerLazySingleton<ChatRemoteDataSource>(
+    () => ChatRemoteDataSourceImpl(sl()),
+  );
+
+  // Repository
+  sl.registerLazySingleton<ChatRepository>(() => ChatRepositoryImpl(sl()));
+
+  // Use cases
+  sl.registerLazySingleton(() => SendMessage(sl()));
+  sl.registerLazySingleton(() => GetUserSessions(sl()));
+  sl.registerLazySingleton(() => GetSessionHistory(sl()));
+  sl.registerLazySingleton(() => DeleteSession(sl()));
+
+  //Contact
+  //Bloc
+  sl.registerFactory(() => ContactBloc(form: sl()));
+
+  // Usecases
+  sl.registerLazySingleton(() => SubmitContactForm(sl()));
+  //repository
+  sl.registerLazySingleton<ContactRepository>(
+    () => ContactRepositoryImpl(remoteDatasource: sl()),
+  );
+  //datasource
+  sl.registerLazySingleton<ContactRemoteDatasource>(
+    () => ContactRemoteDatasourceImpl(dio: sl()),
+  );
 }

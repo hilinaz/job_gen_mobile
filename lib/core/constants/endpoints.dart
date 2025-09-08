@@ -1,3 +1,4 @@
+
 class Endpoints {
   // Auth endpoints
   static const login = '/auth/login';
@@ -26,6 +27,14 @@ class Endpoints {
   static const jobSearch = '/jobs/search';
   static const matchedJobs = '/jobs/matched';
 
+  //Chatbot endpoints
+  static const sendChatMessage = '/chat/message';
+  static const getChatSessions = '/chat/sessions';
+  static const getChatSessionById = '/chat/session';
+  static const deleteChatSession = '/chat/session';
+  //contact
+  static const contact = '/contact';
+
   // User Profile endpoints
   static const getProfile = '/users/profile';
   static const updateProfile = '/users/profile';
@@ -36,13 +45,14 @@ class Endpoints {
   static const uploadDocument = '/files/upload/document';
   static const myProfilePic = '/files/profile-picture/me';
   // Note: There is no general /files endpoint in the backend
-
-  //contact
-  static const contact = '/contact';
-
   // Methods for dynamic endpoints
   static String profilePicByUserId(String userId) =>
       '/files/profile-picture/$userId';
   static String downloadFile(String fileId) => '/files/$fileId';
   static String deleteFile(String fileId) => '/files/$fileId';
+
+
+
+
+
 }
