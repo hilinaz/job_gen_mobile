@@ -129,6 +129,9 @@ class MyApp extends StatelessWidget {
           create: (context) => di.sl<JobManagementBloc>(),
         ),
         BlocProvider<JobsBloc>(create: (context) => di.sl<JobsBloc>()),
+
+        //contact bloc
+        BlocProvider<ContactBloc>(create: (context) => di.sl<ContactBloc>()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -172,8 +175,15 @@ class MyApp extends StatelessWidget {
           '/job_listing': (_) => JobListingPage(),
           '/job_detail': (_) => const JobDetailPage(),
           '/job_stats': (_) => const JobStatsPage(),
-
+  //contact
           '/contact':(_)=>ContactForm(),
+
+
+           //chatbot
+          '/chatbot_landing': (_) => const ChatLandingPage(),
+          '/chatbot': (_) => const ChatPage(),
+          //contact
+          '/contact':(_)=>ContactForm()
 
           // User Profile
           '/profile': (_) => UserProfilePage(
