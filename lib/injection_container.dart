@@ -69,7 +69,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => sharedPreferences);
   sl.registerLazySingleton(
     () => buildDio(
-      hostBaseUrl: 'http://10.186.72.168:8081/api/v1',
+      hostBaseUrl: 'http://localhost:8080/api/v1',
       sharedPreferences: sl(),
     ),
   );
