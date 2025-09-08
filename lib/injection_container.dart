@@ -1,4 +1,9 @@
 import 'package:get_it/get_it.dart';
+import 'package:job_gen_mobile/features/contact/data/datasources/contact_remote_datasource.dart';
+import 'package:job_gen_mobile/features/contact/data/repositories/contact_repository_impl.dart';
+import 'package:job_gen_mobile/features/contact/domain/repository/contact_repository.dart';
+import 'package:job_gen_mobile/features/contact/domain/usecases/submit_form.dart';
+import 'package:job_gen_mobile/features/contact/presentation/bloc/contact_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'core/network/dio_client.dart';
 import 'core/network/network_info.dart';
@@ -64,7 +69,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => sharedPreferences);
   sl.registerLazySingleton(
     () => buildDio(
-      hostBaseUrl: 'http://localhost:8080/api/v1',
+      hostBaseUrl: 'http://10.186.72.168:8081/api/v1',
       sharedPreferences: sl(),
     ),
   );
@@ -183,4 +188,22 @@ Future<void> init() async {
       getJobBySource: sl(),
     ),
   );
+
+  //Contact
+  //Bloc
+  sl.registerFactory(() => ContactBloc(form: sl()));
+
+   // Usecases
+    sl.registerLazySingleton(()=>SubmitContactForm(sl()));
+    //repository
+      sl.registerLazySingleton<ContactRepository>(
+    () =>ContactRepositoryImpl(remoteDatasource: sl()),
+  );
+  //datasource
+   sl.registerLazySingleton<ContactRemoteDatasource>(
+    () => ContactRemoteDatasourceImpl(dio: sl()),
+  );
+  
+
+
 }
