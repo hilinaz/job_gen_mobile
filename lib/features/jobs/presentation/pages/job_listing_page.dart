@@ -22,24 +22,19 @@ class _JobListingPageState extends State<JobListingPage>
   late TabController _tabController;
   bool _isSearching = false;
   SearchType _searchType = SearchType.keyword;
-  List<JobModel> _cachedTrending = [];
-  List<JobModel> _cachedMatched = [];
+
   List<JobModel> _cachedAll = [];
   final ScrollController _allScroll = ScrollController();
   int _allPage = 1;
   bool _isLoadingMoreAll = false;
-  bool _isAdmin = false; // Add this line to track admin status
+  bool _isAdmin = false;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
     _tabController.addListener(_onTabChanged);
-
-    // Check if user is admin
     _checkAdminRole();
-
-    // Load Trending on open
     context.read<JobsBloc>().add(GetTrendingJobsEvent());
     _allScroll.addListener(_onAllScroll);
   }
@@ -52,7 +47,6 @@ class _JobListingPageState extends State<JobListingPage>
     super.dispose();
   }
 
-  // Add this method to check admin role
   Future<void> _checkAdminRole() async {
     final isAdmin = await RoleManager.hasAdminAccess();
     if (mounted) {
@@ -63,7 +57,7 @@ class _JobListingPageState extends State<JobListingPage>
   }
 
   void _onAllScroll() {
-    if (_tabController.index != 2) return; // Only on All tab
+    if (_tabController.index != 2) return;
     if (_isLoadingMoreAll) return;
     if (!_allScroll.hasClients) return;
     final pos = _allScroll.position;
@@ -78,9 +72,7 @@ class _JobListingPageState extends State<JobListingPage>
   }
 
   Future<void> _handleLogout() async {
-    // Show a quick confirmation and then dispatch logout
     context.read<AuthBloc>().add(SignOutEvent());
-    // Wait a short moment to avoid visible loading loop on current page
     await Future.delayed(const Duration(milliseconds: 150));
     if (!mounted) return;
     Navigator.pushNamedAndRemoveUntil(context, '/sign_in', (route) => false);
@@ -90,13 +82,13 @@ class _JobListingPageState extends State<JobListingPage>
     if (_tabController.indexIsChanging) return;
     final bloc = context.read<JobsBloc>();
     switch (_tabController.index) {
-      case 0: // Trending
+      case 0:
         bloc.add(GetTrendingJobsEvent());
         break;
-      case 1: // For You
+      case 1:
         bloc.add(GetMatchedJobsEvent());
         break;
-      case 2: // All
+      case 2:
         bloc.add(GetJobsEvent());
         break;
     }
@@ -136,8 +128,30 @@ class _JobListingPageState extends State<JobListingPage>
     }
   }
 
+  List<JobModel> _filterJobs(List<JobModel> jobs) {
+    final query = _searchController.text.toLowerCase();
+    if (_searchType == SearchType.skill && _skills.isNotEmpty) {
+      return jobs.where((job) {
+        return _skills.any(
+          (skill) =>
+              job.title.toLowerCase().contains(skill.toLowerCase()) ||
+              job.description.toLowerCase().contains(skill.toLowerCase()),
+        );
+      }).toList();
+    } else if (_searchType == SearchType.keyword && query.isNotEmpty) {
+      return jobs.where((job) {
+        return job.title.toLowerCase().contains(query) ||
+            job.description.toLowerCase().contains(query);
+      }).toList();
+    }
+    return jobs;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final authState = context.watch<AuthBloc>().state;
+    final bool isLoggedIn = authState is SignedInState;
+
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
@@ -180,134 +194,164 @@ class _JobListingPageState extends State<JobListingPage>
             ],
           ),
         ),
-        actions: [
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.menu, color: Colors.white),
-            color: Colors.white,
-            elevation: 8,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            onSelected: (value) async {
-              switch (value) {
-                case 'profile':
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Profile coming soon')),
-                  );
-                  break;
-                case 'jobstats':
-                  if (!mounted) return;
-                  Navigator.pushNamed(context, '/job_stats');
-                  break;
-                case 'chatbot':
-                  if (!mounted) return;
-                  Navigator.pushNamed(context, '/chatbot_landing');
-                  break;
-                case 'admin_dashboard':
-                  if (!mounted) return;
-                  Navigator.pushNamed(context, '/admin_dashboard');
-                  break;
-                case 'logout':
-                  await _handleLogout();
-                  break;
-              }
-            },
-            itemBuilder: (context) {
-              final menuItems = <PopupMenuEntry<String>>[
-                PopupMenuItem(
-                  value: 'profile',
-                  child: SizedBox(
-                    width: 220,
-                    child: Row(
-                      children: const [
-                        Icon(Icons.person_outline, color: Colors.black87),
-                        SizedBox(width: 12),
-                        Text('Profile'),
-                      ],
-                    ),
-                  ),
-                ),
-                PopupMenuItem(
-                  value: 'jobstats',
-                  child: SizedBox(
-                    width: 220,
-                    child: Row(
-                      children: const [
-                        Icon(Icons.bar_chart_outlined, color: Colors.black87),
-                        SizedBox(width: 12),
-                        Text('Job Stats'),
-                      ],
-                    ),
-                  ),
-                ),
-                PopupMenuItem(
-                  value: 'chatbot',
-                  child: SizedBox(
-                    width: 220,
-                    child: Row(
-                      children: const [
-                        Icon(Icons.chat_bubble_outline, color: Colors.black87),
-                        SizedBox(width: 12),
-                        Text('Chatbot'),
-                      ],
-                    ),
-                  ),
-                ),
-              ];
 
-              // Add admin dashboard option if user is admin
-              if (_isAdmin) {
-                menuItems.add(
-                  PopupMenuItem(
-                    value: 'admin_dashboard',
-                    child: SizedBox(
-                      width: 220,
-                      child: Row(
-                        children: const [
-                          Icon(Icons.admin_panel_settings, color: Colors.blue),
-                          SizedBox(width: 12),
-                          Text('Admin Dashboard'),
-                        ],
+        actions: isLoggedIn
+            ? [
+                PopupMenuButton<String>(
+                  icon: const Icon(Icons.menu, color: Colors.white),
+                  color: Colors.white,
+                  elevation: 8,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  onSelected: (value) async {
+                    switch (value) {
+                      case 'profile':
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Profile coming soon')),
+                        );
+                        break;
+                      case 'jobstats':
+                        if (!mounted) return;
+                        Navigator.pushNamed(context, '/job_stats');
+                        break;
+                      case 'chatbot':
+                        if (!mounted) return;
+                        Navigator.pushNamed(context, '/chatbot_landing');
+                        break;
+                      case 'admin_dashboard':
+                        if (!mounted) return;
+                        Navigator.pushNamed(context, '/admin_dashboard');
+                        break;
+                      case 'feedback':
+                        if (!mounted) return;
+                        Navigator.pushNamed(context, '/contact');
+                        break;
+                      case 'logout':
+                        await _handleLogout();
+                        break;
+                    }
+                  },
+                  itemBuilder: (context) {
+                    final menuItems = <PopupMenuEntry<String>>[
+                      PopupMenuItem(
+                        value: 'profile',
+                        child: SizedBox(
+                          width: 220,
+                          child: Row(
+                            children: const [
+                              Icon(Icons.person_outline, color: Colors.black87),
+                              SizedBox(width: 12),
+                              Text('Profile'),
+                            ],
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                );
-              }
-              
-              // Add divider and logout option
-              menuItems.add(const PopupMenuDivider());
-              menuItems.add(
-                PopupMenuItem(
-                  value: 'logout',
-                  child: SizedBox(
-                    width: 220,
-                    child: Row(
-                      children: const [
-                        Icon(Icons.logout, color: Colors.redAccent),
-                        SizedBox(width: 12),
-                        Text('Logout'),
-                      ],
-                    ),
-                  ),
-                ),
-              );
+                      PopupMenuItem(
+                        value: 'jobstats',
+                        child: SizedBox(
+                          width: 220,
+                          child: Row(
+                            children: const [
+                              Icon(
+                                Icons.bar_chart_outlined,
+                                color: Colors.black87,
+                              ),
+                              SizedBox(width: 12),
+                              Text('Job Stats'),
+                            ],
+                          ),
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: 'chatbot',
+                        child: SizedBox(
+                          width: 220,
+                          child: Row(
+                            children: const [
+                              Icon(
+                                Icons.chat_bubble_outline,
+                                color: Colors.black87,
+                              ),
+                              SizedBox(width: 12),
+                              Text('Chatbot'),
+                            ],
+                          ),
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: 'feedback',
+                        child: SizedBox(
+                          width: 220,
+                          child: Row(
+                            children: const [
+                              Icon(
+                                Icons.feedback_outlined,
+                                color: Colors.black87,
+                              ),
+                              SizedBox(width: 12),
+                              Text('Feedback'),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ];
 
-              return menuItems;
-            },
-          ),
-          const SizedBox(width: 8),
-        ],
+                    if (_isAdmin) {
+                      menuItems.add(
+                        PopupMenuItem(
+                          value: 'admin_dashboard',
+                          child: SizedBox(
+                            width: 220,
+                            child: Row(
+                              children: const [
+                                Icon(
+                                  Icons.admin_panel_settings,
+                                  color: Colors.blue,
+                                ),
+                                SizedBox(width: 12),
+                                Text('Admin Dashboard'),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    }
+
+                    menuItems.add(const PopupMenuDivider());
+                    menuItems.add(
+                      PopupMenuItem(
+                        value: 'logout',
+                        child: SizedBox(
+                          width: 220,
+                          child: Row(
+                            children: const [
+                              Icon(Icons.logout, color: Colors.redAccent),
+                              SizedBox(width: 12),
+                              Text('Logout'),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+
+                    return menuItems;
+                  },
+                ),
+                const SizedBox(width: 8),
+              ]
+            : null,
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header + Skills
+          // Header
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
+              children: const [
+                Text(
                   'Find your next job',
                   style: TextStyle(
                     fontSize: 28,
@@ -315,115 +359,117 @@ class _JobListingPageState extends State<JobListingPage>
                     color: Colors.black87,
                   ),
                 ),
-                const SizedBox(height: 6),
-                const Text(
+                SizedBox(height: 6),
+                Text(
                   'A curated list of job openings for you',
                   style: TextStyle(fontSize: 16, color: Colors.black54),
                 ),
-                const SizedBox(height: 16),
-                if (_skills.isNotEmpty)
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 4,
-                    children: _skills
-                        .map(
-                          (skill) => Chip(
-                            label: Text(skill),
-                            onDeleted: () => _removeSkill(skill),
-                            deleteIcon: const Icon(Icons.close),
-                            backgroundColor: const Color(0xFFB8E0C8),
-                            labelStyle: const TextStyle(color: Colors.black87),
-                          ),
-                        )
-                        .toList(),
-                  ),
+                SizedBox(height: 16),
               ],
             ),
-          ),
-          // Search bar + icon + search type selector
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _searchController,
-                    autofocus: _isSearching,
-                    decoration: InputDecoration(
-                      hintText: _searchType == SearchType.keyword
-                          ? 'Search by keyword...'
-                          : 'Add a skill...',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                      filled: true,
-                      fillColor: Colors.white,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 0,
-                      ),
-                    ),
-                    onSubmitted: _onSearchSubmitted,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                IconButton(
-                  icon: Icon(_isSearching ? Icons.close : Icons.search),
-                  onPressed: () => _onSearchSubmitted(_searchController.text),
-                ),
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.grey.shade300),
-                  ),
-                  child: DropdownButton<SearchType>(
-                    value: _searchType,
-                    underline: const SizedBox(),
-                    items: const [
-                      DropdownMenuItem(
-                        value: SearchType.keyword,
-                        child: Text('Keyword'),
-                      ),
-                      DropdownMenuItem(
-                        value: SearchType.skill,
-                        child: Text('Skill'),
-                      ),
-                    ],
-                    onChanged: (value) {
-                      if (value != null) {
-                        setState(() {
-                          _searchType = value;
-                          _searchController.clear();
-                        });
-                      }
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const Divider(height: 1, color: Colors.grey),
-          // Tabs
-          TabBar(
-            controller: _tabController,
-            labelColor: const Color(0xFF1F4529),
-            unselectedLabelColor: Colors.grey,
-            indicatorColor: const Color(0xFF1F4529),
-            tabs: const [
-              Tab(text: 'Trending'),
-              Tab(text: 'For You'),
-              Tab(text: 'All'),
-            ],
           ),
 
+          // Logged-in UI
+          if (isLoggedIn) ...[
+            if (_skills.isNotEmpty)
+              Wrap(
+                spacing: 8,
+                runSpacing: 4,
+                children: _skills
+                    .map(
+                      (skill) => Chip(
+                        label: Text(skill),
+                        onDeleted: () => _removeSkill(skill),
+                        deleteIcon: const Icon(Icons.close),
+                        backgroundColor: const Color(0xFFB8E0C8),
+                        labelStyle: const TextStyle(color: Colors.black87),
+                      ),
+                    )
+                    .toList(),
+              ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _searchController,
+                      autofocus: _isSearching,
+                      decoration: InputDecoration(
+                        hintText: _searchType == SearchType.keyword
+                            ? 'Search by keyword...'
+                            : 'Add a skill...',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        filled: true,
+                        fillColor: Colors.white,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 0,
+                        ),
+                      ),
+                      onSubmitted: _onSearchSubmitted,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    icon: Icon(_isSearching ? Icons.close : Icons.search),
+                    onPressed: () => _onSearchSubmitted(_searchController.text),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey.shade300),
+                    ),
+                    child: DropdownButton<SearchType>(
+                      value: _searchType,
+                      underline: const SizedBox(),
+                      items: const [
+                        DropdownMenuItem(
+                          value: SearchType.keyword,
+                          child: Text('Keyword'),
+                        ),
+                        DropdownMenuItem(
+                          value: SearchType.skill,
+                          child: Text('Skill'),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() {
+                            _searchType = value;
+                            _searchController.clear();
+                          });
+                        }
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1, color: Colors.grey),
+            TabBar(
+              controller: _tabController,
+              labelColor: const Color(0xFF1F4529),
+              unselectedLabelColor: Colors.grey,
+              indicatorColor: const Color(0xFF1F4529),
+              tabs: const [
+                Tab(text: 'Trending'),
+                Tab(text: 'For You'),
+                Tab(text: 'All'),
+              ],
+            ),
+          ],
+
+          // Job list
           Expanded(
             child: MultiBlocListener(
               listeners: [
-                // Only keep caching for All (pagination). For You handled via bloc fallback
                 BlocListener<JobsBloc, JobsState>(
                   listenWhen: (p, c) => c is GotJobsState,
                   listener: (context, state) {
@@ -448,8 +494,7 @@ class _JobListingPageState extends State<JobListingPage>
                   _buildJobsTabFromState(
                     selector: (state) {
                       if (state is GotMatchedJobsState) return state.jobs;
-                      if (state is GotJobsState)
-                        return state.jobs; // fallback to all
+                      if (state is GotJobsState) return state.jobs;
                       return const <JobModel>[];
                     },
                   ),
@@ -466,7 +511,6 @@ class _JobListingPageState extends State<JobListingPage>
     );
   }
 
-  /// Generic builder for a jobs tab
   Widget _buildJobsTab({
     required List<JobModel> Function() dataProvider,
     ScrollController? controller,
@@ -483,11 +527,9 @@ class _JobListingPageState extends State<JobListingPage>
           }
         }
         final filteredJobs = _filterJobs(jobs);
-
         if (filteredJobs.isEmpty) {
           return const Center(child: Text('No jobs found.'));
         }
-
         return ListView.builder(
           padding: const EdgeInsets.all(16),
           itemCount: filteredJobs.length,
@@ -512,7 +554,6 @@ class _JobListingPageState extends State<JobListingPage>
     );
   }
 
-  /// Builder for tabs that read from bloc (Trending, For You)
   Widget _buildJobsTabFromState({
     required List<JobModel> Function(JobsState state) selector,
   }) {
@@ -550,27 +591,5 @@ class _JobListingPageState extends State<JobListingPage>
         );
       },
     );
-  }
-
-  /// Filters a list of JobModel based on search type
-  List<JobModel> _filterJobs(List<JobModel> jobs) {
-    final query = _searchController.text.toLowerCase();
-
-    if (_searchType == SearchType.skill && _skills.isNotEmpty) {
-      return jobs.where((job) {
-        return _skills.any(
-          (skill) =>
-              job.title.toLowerCase().contains(skill.toLowerCase()) ||
-              job.description.toLowerCase().contains(skill.toLowerCase()),
-        );
-      }).toList();
-    } else if (_searchType == SearchType.keyword && query.isNotEmpty) {
-      return jobs.where((job) {
-        return job.title.toLowerCase().contains(query) ||
-            job.description.toLowerCase().contains(query);
-      }).toList();
-    }
-
-    return jobs;
   }
 }

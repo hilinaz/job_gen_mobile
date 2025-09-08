@@ -28,9 +28,13 @@ import 'package:job_gen_mobile/features/admin/presentation/pages/job_form_screen
 import 'package:job_gen_mobile/features/admin/presentation/pages/job_details_screen.dart';
 
 import 'package:job_gen_mobile/core/widgets/admin_role_guard.dart';
+
 import 'package:job_gen_mobile/features/chatbot/presentation/bloc/chat_bloc.dart';
 import 'package:job_gen_mobile/features/chatbot/presentation/pages/chat_landing_page.dart';
 import 'package:job_gen_mobile/features/chatbot/presentation/pages/chat_page.dart';
+
+import 'package:job_gen_mobile/features/contact/presentation/bloc/contact_bloc.dart';
+import 'package:job_gen_mobile/features/contact/presentation/pages/contact_form.dart';
 import 'package:job_gen_mobile/features/jobs/presentation/bloc/jobs_bloc.dart';
 import 'package:job_gen_mobile/features/jobs/presentation/pages/job_listing_page.dart';
 import 'package:job_gen_mobile/features/jobs/presentation/pages/job_detail_page.dart';
@@ -118,6 +122,7 @@ class MyApp extends StatelessWidget {
           create: (context) => di.sl<JobManagementBloc>(),
         ),
         BlocProvider<JobsBloc>(create: (context) => di.sl<JobsBloc>()),
+
         //Chat bloc
         BlocProvider<ChatBloc>(
           create: (context) => ChatBloc(
@@ -127,6 +132,11 @@ class MyApp extends StatelessWidget {
             deleteSession: di.sl(),
           ),
         ),
+
+        //contact bloc
+        BlocProvider<ContactBloc>(create: (context) => di.sl<ContactBloc>()),
+      
+
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -170,9 +180,13 @@ class MyApp extends StatelessWidget {
           '/job_detail': (_) => const JobDetailPage(),
           '/job_stats': (_) => const JobStatsPage(),
 
+
           //chatbot
           '/chatbot_landing': (_) => const ChatLandingPage(),
           '/chatbot': (_) => const ChatPage(),
+          //contact
+          '/contact':(_)=>ContactForm()
+
         },
       ),
     );

@@ -31,4 +31,6 @@ class Endpoints {
   static const getChatSessions = '/chat/sessions';
   static const getChatSessionById = '/chat/session';
   static const deleteChatSession = '/chat/session';  
+  //contact
+  static const contact = '/contact';
 }

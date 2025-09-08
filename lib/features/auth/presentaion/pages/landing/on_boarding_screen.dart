@@ -38,7 +38,7 @@ class _OnBoardingScreenState extends State<OnBoardingScreen> {
       if (_currentStep < _onboardingData.length - 1) {
         _currentStep++;
       } else {
-        Navigator.pushNamed(context,'/sign_up');
+        Navigator.pushNamed(context, '/sign_up');
       }
     });
   }
@@ -63,10 +63,63 @@ class _OnBoardingScreenState extends State<OnBoardingScreen> {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24.0),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+           
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    PopupMenuButton<String>(
+                      icon: Icon(
+                        Icons.menu,
+                        color: useWhiteBackground
+                            ? const Color(0xFF45A29E)
+                            : Colors.white,
+                      ),
+                      color: Colors.white,
+                      elevation: 8,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      onSelected: (value) {
+                        switch (value) {
+                          case 'login':
+                            Navigator.pushNamed(context, '/sign_in');
+                            break;
+                          case 'try_free':
+                            Navigator.pushNamed(context, '/job_listing');
+                            break;
+                        }
+                      },
+                      itemBuilder: (context) => [
+                        PopupMenuItem(
+                          value: 'login',
+                          child: Row(
+                            children: const [
+                              Icon(Icons.login, color: Colors.black87),
+                              SizedBox(width: 12),
+                              Text('Login'),
+                            ],
+                          ),
+                        ),
+                        const PopupMenuDivider(),
+                        PopupMenuItem(
+                          value: 'try_free',
+                          child: Row(
+                            children: const [
+                              Icon(Icons.star_border, color: Colors.black87),
+                              SizedBox(width: 12),
+                              Text('Try for Free'),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+
                 const Spacer(),
+
                 // Title
                 Text(
                   _onboardingData[_currentStep]["title"]!,

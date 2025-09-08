@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:job_gen_mobile/features/jobs/data/models/job_status_model.dart';
+
 import 'package:job_gen_mobile/features/jobs/presentation/bloc/jobs_bloc.dart';
 import 'package:job_gen_mobile/features/auth/presentaion/bloc/auth_bloc.dart';
 
@@ -25,6 +25,12 @@ class _JobStatsPageState extends State<JobStatsPage> {
       appBar: AppBar(
         backgroundColor: const Color(0xFF7BBFB3),
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
         title: const Text(
           'Job Stats',
           style: TextStyle(fontWeight: FontWeight.bold),
@@ -134,10 +140,18 @@ class _JobStatsPageState extends State<JobStatsPage> {
               ..sort((a, b) => b.value.compareTo(a.value));
 
             return SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  const Center(
+                    child: Icon(
+                      Icons.bar_chart,
+                      size: 80,
+                      color: Color(0xFF7BBFB3),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
                   _statCard(
                     title: 'Total Jobs',
                     value: stats.totalJobs.toString(),
@@ -245,67 +259,67 @@ class _JobStatsPageState extends State<JobStatsPage> {
 
   Widget _barList(List<MapEntry<String, int>> items) {
     if (items.isEmpty) return const Text('No source data');
-    final maxVal = items
-        .map((e) => e.value)
-        .fold<int>(0, (p, v) => v > p ? v : p);
+
     return Column(
-      children: items
-          .map(
-            (e) => Padding(
-              padding: const EdgeInsets.symmetric(vertical: 6),
-              child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Chart',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        Table(
+          columnWidths: const {0: FlexColumnWidth(3), 1: FlexColumnWidth(1)},
+          defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+          children: [
+            const TableRow(
+              children: [
+                Padding(
+                  padding: EdgeInsets.symmetric(vertical: 4.0),
+                  child: Text(
+                    'Source',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.symmetric(vertical: 4.0),
+                  child: Text(
+                    'Count',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      color: Colors.black87,
+                    ),
+                    textAlign: TextAlign.end,
+                  ),
+                ),
+              ],
+            ),
+            ...items.map(
+              (e) => TableRow(
                 children: [
-                  SizedBox(
-                    width: 80,
-                    child: Text(
-                      e.key,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Colors.black87,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4.0),
+                    child: Text(e.key, style: const TextStyle(fontSize: 14)),
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Stack(
-                      children: [
-                        Container(
-                          height: 14,
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade300,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        FractionallySizedBox(
-                          widthFactor: maxVal == 0 ? 0 : (e.value / maxVal),
-                          child: Container(
-                            height: 14,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF6BBAA5),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  SizedBox(
-                    width: 36,
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4.0),
                     child: Text(
                       e.value.toString(),
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Colors.black87,
-                      ),
+                      style: const TextStyle(fontSize: 14),
+                      textAlign: TextAlign.end,
                     ),
                   ),
                 ],
               ),
             ),
-          )
-          .toList(),
+          ],
+        ),
+      ],
     );
   }
 }
