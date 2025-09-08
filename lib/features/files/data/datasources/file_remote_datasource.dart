@@ -1,5 +1,5 @@
+import 'dart:async';
 import 'package:dio/dio.dart';
-import 'package:get_it/get_it.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/endpoints.dart';
@@ -91,7 +91,7 @@ class FileRemoteDataSourceImpl implements FileRemoteDataSource {
 
       final downloadUrl = await getDownloadUrl(envelope.data!.id);
       return downloadUrl;
-    } on DioException catch (e) {
+    } on DioException {
       rethrow;
     }
   }
@@ -161,7 +161,7 @@ class FileRemoteDataSourceImpl implements FileRemoteDataSource {
       } catch (e) {
         throw Exception('Failed to parse server response');
       }
-    } on DioException catch (e) {
+    } on DioException {
       rethrow;
     } catch (e) {
       rethrow;
@@ -171,10 +171,31 @@ class FileRemoteDataSourceImpl implements FileRemoteDataSource {
   @override
   Future<String> getDownloadUrl(String fileId) async {
     try {
-      final res = await dio.get(Endpoints.downloadFile(fileId));
+      final res = await dio.get(
+        Endpoints.downloadFile(fileId),
+        options: Options(
+          headers: {'Accept': 'application/json'},
+          followRedirects: false, // Disable automatic redirects
+          validateStatus: (status) =>
+              status! < 400, // Accept any status code < 400
+        ),
+      );
 
-      print('Download URL response: ${res.data}');
+      // Debug logging
+      print('Download URL response status: ${res.statusCode}');
+      print('Response headers: ${res.headers}');
+      print('Response data type: ${res.data.runtimeType}');
 
+      // Check if response is a redirect (MinIO URL)
+      if (res.statusCode == 302 || res.statusCode == 307) {
+        final redirectUrl = res.headers['location']?.first;
+        if (redirectUrl != null) {
+          print('Received redirect to: $redirectUrl');
+          return redirectUrl;
+        }
+      }
+
+      // Handle JSON response if not a redirect
       if (res.data is Map<String, dynamic>) {
         final responseData = res.data as Map<String, dynamic>;
 
@@ -208,9 +229,19 @@ class FileRemoteDataSourceImpl implements FileRemoteDataSource {
         }
       }
 
+      // If we get here, try to use response data as direct URL
+      if (res.data is String && (res.data as String).isNotEmpty) {
+        return res.data;
+      }
+
       throw Exception('Download URL not found in response');
-    } catch (e) {
-      print('Error getting download URL: $e');
+    } on DioException catch (e) {
+      print('DioError getting download URL: ${e.message}');
+      print('Error response: ${e.response?.data}');
+      rethrow;
+    } catch (e, stackTrace) {
+      print('Error in getDownloadUrl: $e');
+      print('Stack trace: $stackTrace');
       rethrow;
     }
   }
@@ -218,23 +249,28 @@ class FileRemoteDataSourceImpl implements FileRemoteDataSource {
   @override
   Future<String> getMyProfilePictureUrl() async {
     try {
-      final res = await dio.get(Endpoints.myProfilePic);
-      final envelope = ApiEnvelope.fromJson(
-        res.data,
-        (d) => d?.toString() ?? '',
+      final response = await dio.get(
+        Endpoints.myProfilePic,
+        options: Options(
+          responseType: ResponseType.json, // Expect JSON
+          followRedirects: false,
+          validateStatus: (status) => status! < 400,
+          headers: {'Accept': 'application/json'},
+        ),
       );
 
-      if (envelope.data == null) {
-        throw Exception(
-          envelope.error?.message ??
-              envelope.message ??
-              'Profile picture fetch failed',
-        );
+      print('Profile picture response: ${response.data}');
+
+      if (response.data is Map<String, dynamic>) {
+        final url = response.data['message']?.toString();
+        if (url != null && url.isNotEmpty) {
+          return url;
+        }
       }
 
-      return envelope.data!;
-    } catch (e) {
-      print('Error getting my profile picture URL: $e');
+      throw Exception('No profile picture URL in response');
+    } on DioException catch (e) {
+      print('DioError: ${e.message}');
       rethrow;
     }
   }
@@ -242,23 +278,59 @@ class FileRemoteDataSourceImpl implements FileRemoteDataSource {
   @override
   Future<String> getProfilePictureUrl(String userId) async {
     try {
-      final res = await dio.get(Endpoints.profilePicByUserId(userId));
-      final envelope = ApiEnvelope.fromJson(
-        res.data,
-        (d) => d?.toString() ?? '',
+      final res = await dio.get(
+        Endpoints.profilePicByUserId(userId),
+        options: Options(
+          headers: {'Accept': 'application/json'},
+          followRedirects: false, // Disable automatic redirects
+          validateStatus: (status) =>
+              status! < 400, // Accept any status code < 400
+        ),
       );
 
-      if (envelope.data == null) {
-        throw Exception(
-          envelope.error?.message ??
-              envelope.message ??
-              'Profile picture fetch failed',
-        );
+      // Debug logging
+      print('Profile picture response status: ${res.statusCode}');
+      print('Response headers: ${res.headers}');
+      print('Response data type: ${res.data.runtimeType}');
+
+      // Check if response is a redirect (MinIO URL)
+      if (res.statusCode == 302 || res.statusCode == 307) {
+        final redirectUrl = res.headers['location']?.first;
+        if (redirectUrl != null) {
+          print('Received redirect to: $redirectUrl');
+          return redirectUrl;
+        }
       }
 
-      return envelope.data!;
-    } catch (e) {
-      print('Error getting profile picture URL for user $userId: $e');
+      // Try to parse as JSON envelope if not a redirect
+      try {
+        final envelope = ApiEnvelope.fromJson(
+          res.data,
+          (d) => d?.toString() ?? '',
+        );
+
+        if (envelope.data != null) {
+          return envelope.data!;
+        }
+      } catch (e) {
+        print('Failed to parse response as JSON envelope: $e');
+      }
+
+      // If we get here, try to use response data as direct URL
+      if (res.data is String && (res.data as String).isNotEmpty) {
+        return res.data;
+      }
+
+      throw Exception(
+        'Failed to get valid profile picture URL for user $userId',
+      );
+    } on DioException catch (e) {
+      print('DioError getting profile picture for user $userId: ${e.message}');
+      print('Error response: ${e.response?.data}');
+      rethrow;
+    } catch (e, stackTrace) {
+      print('Error in getProfilePictureUrl for user $userId: $e');
+      print('Stack trace: $stackTrace');
       rethrow;
     }
   }
@@ -341,9 +413,9 @@ class FileRemoteDataSourceImpl implements FileRemoteDataSource {
 
   // Helper method to determine file type from file properties
   String _getFileType(JgFileModel file) {
-    if (file.contentType?.contains('pdf') == true) {
+    if (file.contentType.contains('pdf') == true) {
       return 'document';
-    } else if (file.contentType?.contains('image') == true) {
+    } else if (file.contentType.contains('image') == true) {
       return 'profile_picture';
     } else if (file.bucketName == 'profile-pictures') {
       return 'profile_picture';
@@ -377,11 +449,11 @@ class FileRemoteDataSourceImpl implements FileRemoteDataSource {
       final prefs = await SharedPreferences.getInstance();
       final authService = AuthService.getInstance(prefs);
       final userId = authService.currentUserId;
-      
+
       if (userId == null) {
         print('No user is currently logged in');
       }
-      
+
       return userId;
     } catch (e) {
       print('Error getting current user ID: $e');

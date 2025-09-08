@@ -67,3 +67,12 @@ class GetUserFilesState extends FilesState {
   @override
   List<Object> get props => [files];
 }
+
+class FilesProfilePictureLoaded extends FilesState {
+  final String profilePictureUrl;
+
+  const FilesProfilePictureLoaded({required this.profilePictureUrl});
+
+  @override
+  List<Object> get props => [profilePictureUrl];
+}

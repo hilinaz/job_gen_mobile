@@ -16,20 +16,20 @@ class UserProfileModel extends UserProfile {
   });
 
   factory UserProfileModel.fromJson(Map<String, dynamic> json) {
-    String _asString(dynamic v, {String fallback = ''}) {
+    String asString(dynamic v, {String fallback = ''}) {
       if (v == null) return fallback;
       if (v is String) return v;
       return v.toString();
     }
 
-    int? _asInt(dynamic v) {
+    int? asInt(dynamic v) {
       if (v == null) return null;
       if (v is int) return v;
       if (v is double) return v.toInt();
       return int.tryParse(v.toString());
     }
 
-    List<String> _asStringList(dynamic v) {
+    List<String> asStringList(dynamic v) {
       if (v == null) return <String>[];
       if (v is List) {
         return v.map((e) => e.toString()).toList();
@@ -40,31 +40,32 @@ class UserProfileModel extends UserProfile {
     try {
       // Debug log the incoming JSON
       print('Parsing UserProfileModel from JSON: $json');
-      
+
       // Extract user object if it exists at the root level
-      final userData = json['user'] is Map<String, dynamic> 
-          ? json['user'] as Map<String, dynamic> 
+      final userData = json['user'] is Map<String, dynamic>
+          ? json['user'] as Map<String, dynamic>
           : json;
 
       final profile = UserProfileModel(
-        id: _asString(userData['id']),
-        username: _asString(userData['username']),
-        email: _asString(userData['email']),
-        fullName: _asString(userData['full_name']),
+        id: asString(userData['id']),
+        username: asString(userData['username']),
+        email: asString(userData['email']),
+        fullName: asString(userData['full_name']),
         bio: userData['bio']?.toString(),
-        skills: _asStringList(userData['skills']),
-        experienceYears: _asInt(userData['experience_years']),
+        skills: asStringList(userData['skills']),
+        experienceYears: asInt(userData['experience_years']),
         location: userData['location']?.toString(),
         phoneNumber: userData['phone_number']?.toString(),
         profilePicture: userData['profile_picture']?.toString(),
-        active: userData['is_active'] == true || 
-                userData['active'] == true || 
-                userData['is_active'] == 1 || 
-                userData['active'] == 1 ||
-                userData['is_active'] == 'true' ||
-                userData['active'] == 'true',
+        active:
+            userData['is_active'] == true ||
+            userData['active'] == true ||
+            userData['is_active'] == 1 ||
+            userData['active'] == 1 ||
+            userData['is_active'] == 'true' ||
+            userData['active'] == 'true',
       );
-      
+
       print('Successfully parsed UserProfileModel: $profile');
       return profile;
     } catch (e) {
@@ -73,6 +74,7 @@ class UserProfileModel extends UserProfile {
     }
   }
 
+  @override
   Map<String, dynamic> toJson() {
     return {
       'user': {

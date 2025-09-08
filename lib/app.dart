@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:job_gen_mobile/features/files/domain/repositories/file_repository.dart';
 import 'package:job_gen_mobile/features/files/domain/usecases/delete_file.dart';
 import 'package:job_gen_mobile/features/files/domain/usecases/download_file.dart';
 import 'package:job_gen_mobile/features/files/domain/usecases/get_current_user_files.dart';
+import 'package:job_gen_mobile/features/files/domain/usecases/get_my_profile_picture_url_usecase.dart';
 import 'package:job_gen_mobile/features/files/domain/usecases/get_profile_picture.dart';
 import 'package:job_gen_mobile/features/files/domain/usecases/get_user_files.dart';
 import 'package:job_gen_mobile/features/files/domain/usecases/upload_document.dart';
 import 'package:job_gen_mobile/features/files/domain/usecases/upload_profile_picture.dart';
 import 'package:job_gen_mobile/features/files/presentation/bloc/files_bloc.dart';
-import 'package:job_gen_mobile/features/files/data/datasources/file_remote_datasource.dart';
 import 'package:job_gen_mobile/features/user_profile/domain/usecases/user_profile/delete_account.dart';
 import 'package:job_gen_mobile/features/user_profile/domain/usecases/user_profile/get_user_profile.dart';
 import 'package:job_gen_mobile/features/user_profile/domain/usecases/user_profile/update_user_profile.dart';
 import 'package:job_gen_mobile/features/user_profile/presentation/bloc/user_profile_bloc.dart';
 import 'package:job_gen_mobile/features/user_profile/presentation/pages/user_profile_page.dart';
-import 'package:provider/provider.dart';
 
 class App extends StatelessWidget {
   const App({super.key});
@@ -33,18 +33,19 @@ class App extends StatelessWidget {
     final deleteFile = GetIt.I<DeleteFileById>();
     final fileRepository = GetIt.I<FileRepository>();
     final getCurrentUserFiles = GetIt.I<GetCurrentUserFiles>();
+    final getMyProfilePicture = GetIt.I<GetMyProfilePictureUrlUsecase>();
 
-    return MultiProvider(
+    return MultiBlocProvider(
       providers: [
-        Provider<UserProfileBloc>(
+        BlocProvider<UserProfileBloc>(
           create: (_) => UserProfileBloc(
             getUserProfile: getUserProfile,
             updateUserProfile: updateUserProfile,
             deleteAccount: deleteAccount,
+            // getMyProfilePicture: getMyProfilePicture,
           ),
-          dispose: (_, bloc) => bloc.close(),
         ),
-        Provider<FilesBloc>(
+        BlocProvider<FilesBloc>(
           create: (_) => FilesBloc(
             uploadProfilePicture: uploadProfilePicture,
             uploadDocument: uploadDocument,
@@ -53,9 +54,8 @@ class App extends StatelessWidget {
             getProfilePicture: getProfilePicture,
             fileRepository: fileRepository,
             getUserFiles: getCurrentUserFiles,
-            getCurrentUserFiles: getCurrentUserFiles,
+            getMyProfilePicture: getMyProfilePicture,
           ),
-          dispose: (_, bloc) => bloc.close(),
         ),
       ],
       child: MaterialApp(
@@ -71,6 +71,7 @@ class App extends StatelessWidget {
           fileRepository: fileRepository,
           getUserFiles: GetUserFiles(fileRepository),
           getCurrentUserFiles: getCurrentUserFiles,
+          getMyProfilePicture: getMyProfilePicture,
         ),
       ),
     );

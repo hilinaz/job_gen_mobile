@@ -1,6 +1,5 @@
-import 'dart:typed_data';
-
 import 'package:dio/dio.dart';
+import 'package:http/http.dart' as client;
 import 'package:job_gen_mobile/core/constants/endpoints.dart';
 import 'package:job_gen_mobile/core/error/exceptions.dart';
 import '../models/user_profile_model.dart';
@@ -9,6 +8,10 @@ abstract class UserProfileRemoteDataSource {
   Future<UserProfileModel> getUserProfile();
   Future<UserProfileModel> updateUserProfile(UserProfileModel userProfile);
   Future<void> deleteAccount();
+  Future<void> updateUserProfileFields(
+    String userId,
+    Map<String, dynamic> updates,
+  );
 }
 
 class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
@@ -123,6 +126,24 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
       }
     } on DioException catch (e) {
       throw ServerException(e.response?.data['message'] ?? 'Network error');
+    }
+  }
+
+  @override
+  Future<void> updateUserProfileFields(
+    String userId,
+    Map<String, dynamic> updates,
+  ) async {
+    final response = await dio.patch(
+      '${Endpoints.updateProfile}/$userId', // Adjust endpoint as needed
+      data: updates,
+      options: Options(headers: {'Content-Type': 'application/json'}),
+    );
+
+    if (response.statusCode != 200) {
+      throw ServerException(
+        'Failed to update user profile: ${response.statusCode}',
+      );
     }
   }
 }

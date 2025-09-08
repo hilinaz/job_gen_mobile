@@ -14,10 +14,10 @@ class CVViewerPage extends StatefulWidget {
   final String? fileName;
 
   const CVViewerPage({
-    Key? key,
+    super.key,
     required this.fileBytes,
     this.fileName,
-  }) : super(key: key);
+  });
 
   @override
   _CVViewerPageState createState() => _CVViewerPageState();

@@ -41,8 +41,10 @@ class FileRepositoryImpl implements FileRepository {
     print('FileRepositoryImpl.uploadDocument: Starting document upload');
     print('FileRepositoryImpl.uploadDocument: File name: $fileName');
     print('FileRepositoryImpl.uploadDocument: Content type: $contentType');
-    print('FileRepositoryImpl.uploadDocument: File size: ${bytes.length} bytes');
-    
+    print(
+      'FileRepositoryImpl.uploadDocument: File size: ${bytes.length} bytes',
+    );
+
     try {
       print('FileRepositoryImpl.uploadDocument: Calling remote.uploadDocument');
       final file = await remote.uploadDocument(

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
+import 'package:job_gen_mobile/core/usecases/usecases.dart';
 import 'package:job_gen_mobile/features/files/domain/entities/jg_file.dart';
 import 'package:job_gen_mobile/features/files/domain/repositories/file_repository.dart';
 import 'package:job_gen_mobile/features/files/domain/usecases/get_current_user_files.dart';
+import 'package:job_gen_mobile/features/files/domain/usecases/get_my_profile_picture_url_usecase.dart';
 import 'package:job_gen_mobile/features/files/domain/usecases/get_user_files.dart';
 import 'package:job_gen_mobile/features/files/presentation/bloc/files_bloc_state.dart';
 import 'package:job_gen_mobile/features/files/domain/usecases/delete_file.dart';
@@ -24,13 +26,14 @@ import 'package:job_gen_mobile/features/user_profile/presentation/widgets/cv_car
 import 'package:job_gen_mobile/features/user_profile/presentation/widgets/prefered_location_card.dart';
 import 'package:job_gen_mobile/features/user_profile/presentation/widgets/skilled_set.dart'
     as skilled_set;
-import 'package:job_gen_mobile/features/user_profile/presentation/widgets/user_card.dart';
+import 'package:job_gen_mobile/features/user_profile/presentation/widgets/user_card/user_card.dart';
 
 class UserProfilePage extends StatefulWidget {
   final GetUserProfile getUserProfile;
   final UpdateUserProfile updateUserProfile;
   final DeleteAccount deleteAccount;
   final GetProfilePictureUrlByUserId getProfilePicture;
+  final GetMyProfilePictureUrlUsecase getMyProfilePicture;
   final UploadProfilePicture updateProfilePicture;
   final DeleteFileById deleteProfilePicture;
   final FileRepository fileRepository;
@@ -43,6 +46,7 @@ class UserProfilePage extends StatefulWidget {
     required this.updateUserProfile,
     required this.deleteAccount,
     required this.getProfilePicture,
+    required this.getMyProfilePicture,
     required this.updateProfilePicture,
     required this.deleteProfilePicture,
     required this.fileRepository,
@@ -59,15 +63,40 @@ class _UserProfilePageState extends State<UserProfilePage> {
   JgFile? _cvFile;
   bool _isLoading = true;
   String? _errorMessage;
+  String? _profilePictureUrl;
 
   @override
   void initState() {
     super.initState();
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<UserProfileBloc>().add(profile_events.LoadUserProfile());
       context.read<files_bloc.FilesBloc>().add(
         files_bloc.GetProfilePictureEvent(userId: 'current-user'),
+      );
+    });
+
+    widget.getMyProfilePicture.call(NoParams()).then((value) {
+      value.fold(
+        (failure) {
+          print('Failed to get profile picture: $failure');
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Failed to load profile picture: ${failure.message}',
+                ),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        },
+        (url) {
+          if (mounted) {
+            setState(() {
+              _profilePictureUrl = url;
+            });
+          }
+        },
       );
     });
   }
@@ -100,7 +129,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
             getProfilePicture: widget.getProfilePicture,
             fileRepository: widget.fileRepository,
             getUserFiles: widget.getCurrentUserFiles,
-            getCurrentUserFiles: widget.getCurrentUserFiles,
+            getMyProfilePicture: widget.getMyProfilePicture,
           ),
         ),
       ],
@@ -109,6 +138,10 @@ class _UserProfilePageState extends State<UserProfilePage> {
           if (state is FilesCvLoaded) {
             setState(() {
               _cvFile = state.cvFile;
+            });
+          } else if (state is FilesProfilePictureLoaded) {
+            setState(() {
+              _profilePictureUrl = state.profilePictureUrl;
             });
           }
         },
@@ -209,8 +242,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
         children: [
           UserCard(
             userProfile: _userProfile!,
+            getMyProfilePicture: _profilePictureUrl,
             onSave: (updatedProfile) async {
-              // Handle profile save
               context.read<UserProfileBloc>().add(
                 profile_events.UpdateUserProfileEvent(updatedProfile),
               );

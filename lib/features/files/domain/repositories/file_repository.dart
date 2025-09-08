@@ -1,6 +1,5 @@
 import 'dart:typed_data';
 
-import 'package:dio/dio.dart';
 import 'package:job_gen_mobile/features/files/data/models/jg_file_model.dart';
 import 'package:job_gen_mobile/features/files/domain/entities/jg_file.dart';
 
@@ -31,7 +30,7 @@ abstract class FileRepository {
   });
 
   Future<Either<Failure, Unit>> deleteById({required String fileId});
-
+  
   Future<Either<Failure, List<JgFile>>> getUserFiles({
     required String userId,
     String? fileType,

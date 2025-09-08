@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:job_gen_mobile/core/usecases/usecases.dart';
 import 'package:job_gen_mobile/features/files/data/models/jg_file_model.dart';
 import 'package:job_gen_mobile/features/files/domain/usecases/delete_file.dart';
 import 'package:job_gen_mobile/features/files/domain/usecases/download_file.dart';
+import 'package:job_gen_mobile/features/files/domain/usecases/get_my_profile_picture_url_usecase.dart';
 import 'package:job_gen_mobile/features/files/domain/usecases/get_profile_picture.dart';
 import 'package:job_gen_mobile/features/files/domain/repositories/file_repository.dart';
 import 'package:job_gen_mobile/features/files/domain/usecases/get_current_user_files.dart';
@@ -21,6 +23,7 @@ class FilesBloc extends Bloc<FilesEvent, FilesState> {
   final GetProfilePictureUrlByUserId getProfilePicture;
   final FileRepository fileRepository;
   final GetCurrentUserFiles getUserFiles;
+  final GetMyProfilePictureUrlUsecase getMyProfilePicture;
 
   FilesBloc({
     required this.uploadProfilePicture,
@@ -30,7 +33,7 @@ class FilesBloc extends Bloc<FilesEvent, FilesState> {
     required this.getProfilePicture,
     required this.fileRepository,
     required this.getUserFiles,
-    required getCurrentUserFiles,
+    required this.getMyProfilePicture,
   }) : super(FilesInitial()) {
     on<UploadFileEvent>(_onUploadFile);
     on<DownloadFileEvent>(_onDownloadFile);
@@ -39,6 +42,7 @@ class FilesBloc extends Bloc<FilesEvent, FilesState> {
     on<GetUserCVEvent>(_onGetUserCV);
     on<GetUserFilesEvent>(_onGetUserFiles);
     on<GetCurrentUserFilesEvent>(_onGetCurrentUserFiles);
+    on<GetMyProfilePictureEvent>(_onGetMyProfilePicture);
   }
 
   Future<void> _onUploadFile(
@@ -152,7 +156,9 @@ class FilesBloc extends Bloc<FilesEvent, FilesState> {
 
       result.fold(
         (failure) => emit(FilesError(message: failure.toString())),
-        (imageUrl) => emit(ProfilePictureLoaded(imageUrl: imageUrl)),
+        (profilePictureUrl) => emit(
+          FilesProfilePictureLoaded(profilePictureUrl: profilePictureUrl),
+        ),
       );
     } catch (e) {
       emit(FilesError(message: e.toString()));
@@ -236,6 +242,25 @@ class FilesBloc extends Bloc<FilesEvent, FilesState> {
       });
     } catch (e) {
       emit(FilesError(message: 'Failed to load CV: $e'));
+    }
+  }
+
+  Future<void> _onGetMyProfilePicture(
+    GetMyProfilePictureEvent event,
+    Emitter<FilesState> emit,
+  ) async {
+    emit(FilesLoading());
+    try {
+      final result = await getMyProfilePicture.call(NoParams());
+
+      result.fold(
+        (failure) => emit(FilesError(message: failure.toString())),
+        (profilePictureUrl) => emit(
+          FilesProfilePictureLoaded(profilePictureUrl: profilePictureUrl),
+        ),
+      );
+    } catch (e) {
+      emit(FilesError(message: 'Failed to load profile picture: $e'));
     }
   }
 }

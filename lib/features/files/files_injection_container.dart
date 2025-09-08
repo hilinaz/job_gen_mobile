@@ -5,12 +5,13 @@ import 'package:job_gen_mobile/features/files/data/repositories/file_repository_
 import 'package:job_gen_mobile/features/files/domain/repositories/file_repository.dart';
 import 'package:job_gen_mobile/features/files/domain/usecases/delete_file.dart';
 import 'package:job_gen_mobile/features/files/domain/usecases/download_file.dart';
+import 'package:job_gen_mobile/features/files/domain/usecases/get_current_user_files.dart';
+import 'package:job_gen_mobile/features/files/domain/usecases/get_my_profile_picture_url_usecase.dart';
 import 'package:job_gen_mobile/features/files/domain/usecases/get_profile_picture.dart';
 import 'package:job_gen_mobile/features/files/domain/usecases/upload_document.dart';
 import 'package:job_gen_mobile/features/files/domain/usecases/upload_profile_picture.dart';
 import 'package:job_gen_mobile/features/files/presentation/bloc/files_bloc.dart';
 import 'package:job_gen_mobile/features/files/domain/usecases/get_user_files.dart';
-import 'package:job_gen_mobile/features/files/domain/usecases/get_current_user_files.dart';
 
 /// Initialize all file-related dependencies
 Future<void> initFilesFeature(GetIt sl) async {
@@ -24,7 +25,7 @@ Future<void> initFilesFeature(GetIt sl) async {
       getProfilePicture: sl(),
       fileRepository: sl(),
       getUserFiles: sl(),
-      getCurrentUserFiles: sl(),
+      getMyProfilePicture: sl(),
     ),
   );
 
@@ -44,6 +45,10 @@ Future<void> initFilesFeature(GetIt sl) async {
   sl.registerLazySingleton(() => GetProfilePictureUrlByUserId(sl()));
   sl.registerLazySingleton(() => GetUserFiles(sl()));
   sl.registerLazySingleton(() => GetCurrentUserFiles(sl()));
+
+  sl.registerLazySingleton<GetMyProfilePictureUrlUsecase>(
+    () => GetMyProfilePictureUrlUsecase(sl<FileRepository>()),
+  );
 }
 
 /// Helper extension to register files feature

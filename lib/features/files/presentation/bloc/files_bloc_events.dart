@@ -78,3 +78,12 @@ class GetCurrentUserFilesEvent extends FilesEvent {
   @override
   List<Object> get props => [userId];
 }
+
+class GetMyProfilePictureEvent extends FilesEvent {
+  final String userId;
+
+  const GetMyProfilePictureEvent({required this.userId});
+
+  @override
+  List<Object> get props => [userId];
+}

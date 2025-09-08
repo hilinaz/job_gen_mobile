@@ -1,7 +1,3 @@
-import 'dart:io';
-import 'dart:typed_data';
-
-import 'package:dio/dio.dart';
 import 'package:job_gen_mobile/core/error/exceptions.dart';
 import 'package:job_gen_mobile/core/error/failures.dart';
 import 'package:job_gen_mobile/core/network/network_info.dart';
@@ -48,7 +44,7 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
       try {
         // First get the current profile to merge with updates
         final currentProfile = await remoteDataSource.getUserProfile();
-        
+
         // Create a new UserProfileModel with the updated fields
         final updatedProfileModel = UserProfileModel(
           id: currentProfile.id,
@@ -65,12 +61,10 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
           active: currentProfile.active,
         );
 
-        print('Updating profile with data: ${updatedProfileModel.toJson()}');
-        
         final updatedProfile = await remoteDataSource.updateUserProfile(
           updatedProfileModel,
         );
-        
+
         print('Successfully updated profile. New profile: $updatedProfile');
         return Right(updatedProfile);
       } on ServerException catch (e) {

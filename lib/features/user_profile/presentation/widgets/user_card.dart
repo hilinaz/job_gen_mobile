@@ -4,12 +4,14 @@ import 'package:job_gen_mobile/core/error/failures.dart';
 import 'package:job_gen_mobile/features/files/domain/usecases/delete_file.dart';
 import 'package:job_gen_mobile/features/files/domain/usecases/upload_profile_picture.dart';
 import 'package:job_gen_mobile/features/user_profile/domain/entity/user_profile.dart';
+import 'package:job_gen_mobile/features/user_profile/presentation/widgets/user_card_input.dart';
 
 class UserCard extends StatefulWidget {
   final UserProfile? userProfile;
   final Future<void> Function(UserProfile) onSave;
   final UploadProfilePicture updateProfilePicture;
   final DeleteFileById deleteProfilePictureById;
+  final String? getMyProfilePicture;
 
   const UserCard({
     super.key,
@@ -17,6 +19,7 @@ class UserCard extends StatefulWidget {
     required this.onSave,
     required this.updateProfilePicture,
     required this.deleteProfilePictureById,
+    required this.getMyProfilePicture,
   });
 
   @override
@@ -37,6 +40,70 @@ class _UserCardState extends State<UserCard> {
   bool _isUploading = false;
   bool _isDeleting = false;
   final ImagePicker _imagePicker = ImagePicker();
+  String? _currentProfilePictureUrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeControllers();
+    _currentProfilePictureUrl = widget.getMyProfilePicture;
+  }
+
+  void _initializeControllers() {
+    _nameController = TextEditingController(
+      text: widget.userProfile?.fullName ?? '',
+    );
+    _emailController = TextEditingController(
+      text: widget.userProfile?.email ?? '',
+    );
+    _bioController = TextEditingController(text: widget.userProfile?.bio ?? '');
+    _locationController = TextEditingController(
+      text: widget.userProfile?.location ?? '',
+    );
+    _phoneController = TextEditingController(
+      text: widget.userProfile?.phoneNumber ?? '',
+    );
+    _experienceController = TextEditingController(
+      text: widget.userProfile?.experienceYears?.toString() ?? '0',
+    );
+    _skillsController = TextEditingController(
+      text: (widget.userProfile?.skills ?? []).join(', '),
+    );
+    _profilePictureController = TextEditingController(
+      text: widget.userProfile?.profilePicture ?? '',
+    );
+  }
+
+  @override
+  void didUpdateWidget(covariant UserCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // Update when user profile changes
+    if (oldWidget.userProfile != widget.userProfile) {
+      _updateControllersFromProfile();
+    }
+
+    // Update when external profile picture URL changes
+    if (oldWidget.getMyProfilePicture != widget.getMyProfilePicture) {
+      setState(() {
+        _currentProfilePictureUrl = widget.getMyProfilePicture;
+        _profilePictureController.text = widget.getMyProfilePicture ?? '';
+      });
+    }
+  }
+
+  void _updateControllersFromProfile() {
+    _nameController.text = widget.userProfile?.fullName ?? '';
+    _emailController.text = widget.userProfile?.email ?? '';
+    _bioController.text = widget.userProfile?.bio ?? '';
+    _locationController.text = widget.userProfile?.location ?? '';
+    _phoneController.text = widget.userProfile?.phoneNumber ?? '';
+    _experienceController.text =
+        widget.userProfile?.experienceYears?.toString() ?? '';
+    _skillsController.text = (widget.userProfile?.skills ?? []).join(', ');
+    _profilePictureController.text = widget.userProfile?.profilePicture ?? '';
+    _currentProfilePictureUrl = widget.userProfile?.profilePicture;
+  }
 
   Future<void> _pickAndUploadImage() async {
     if (_isUploading) return;
@@ -44,7 +111,6 @@ class _UserCardState extends State<UserCard> {
     try {
       setState(() => _isUploading = true);
 
-      // Show options to pick from gallery or camera
       final XFile? pickedFile = await showModalBottomSheet<XFile>(
         context: context,
         builder: (BuildContext context) {
@@ -87,15 +153,14 @@ class _UserCardState extends State<UserCard> {
 
       if (pickedFile == null) return;
 
-      // Upload the image
       final result = await widget.updateProfilePicture(
         fileName: 'profile_${DateTime.now().millisecondsSinceEpoch}.jpg',
         contentType: 'image/jpeg',
         bytes: await pickedFile.readAsBytes(),
       );
 
-      result.fold(
-        (failure) {
+      await result.fold(
+        (failure) async {
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -104,12 +169,12 @@ class _UserCardState extends State<UserCard> {
             ),
           );
         },
-        (imageUrl) {
+        (imageUrl) async {
           if (!mounted) return;
-          // Update the profile picture URL in the UI
-          setState(() {
-            _profilePictureController.text = imageUrl.toString();
-          });
+
+          // Update the profile picture immediately
+          _updateProfilePicture(imageUrl.toString());
+
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Profile picture updated successfully'),
@@ -119,7 +184,6 @@ class _UserCardState extends State<UserCard> {
         },
       );
     } catch (e) {
-      print('Error in _pickAndUploadImage: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -141,7 +205,6 @@ class _UserCardState extends State<UserCard> {
     try {
       setState(() => _isDeleting = true);
 
-      // Show confirmation dialog
       final bool confirmDelete = await showDialog(
         context: context,
         builder: (BuildContext context) {
@@ -169,7 +232,6 @@ class _UserCardState extends State<UserCard> {
 
       if (!confirmDelete) return;
 
-      // Delete the profile picture
       final result = await widget.deleteProfilePictureById(
         _profilePictureController.text,
       );
@@ -186,10 +248,8 @@ class _UserCardState extends State<UserCard> {
         },
         (_) {
           if (!mounted) return;
-          // Clear the profile picture URL in the UI
-          setState(() {
-            _profilePictureController.text = '';
-          });
+          // Clear the profile picture
+          _updateProfilePicture('');
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Profile picture deleted successfully'),
@@ -212,6 +272,30 @@ class _UserCardState extends State<UserCard> {
     }
   }
 
+  void _updateProfilePicture(String newUrl) {
+    setState(() {
+      _currentProfilePictureUrl = newUrl.isNotEmpty ? newUrl : null;
+      _profilePictureController.text = newUrl;
+    });
+
+    // Update parent widget with new profile data
+    final updatedProfile = UserProfile(
+      id: widget.userProfile?.id ?? '',
+      username: widget.userProfile?.username ?? '',
+      email: widget.userProfile?.email ?? '',
+      fullName: widget.userProfile?.fullName ?? '',
+      bio: widget.userProfile?.bio,
+      skills: widget.userProfile?.skills ?? [],
+      experienceYears: widget.userProfile?.experienceYears,
+      location: widget.userProfile?.location,
+      phoneNumber: widget.userProfile?.phoneNumber,
+      profilePicture: newUrl,
+      active: widget.userProfile?.active ?? true,
+    );
+
+    widget.onSave(updatedProfile);
+  }
+
   String _mapFailureToMessage(Failure failure) {
     switch (failure.runtimeType) {
       case ServerFailure:
@@ -220,49 +304,6 @@ class _UserCardState extends State<UserCard> {
         return 'Network error: ${failure.message}';
       default:
         return 'An error occurred: ${failure.message}';
-    }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _nameController = TextEditingController(
-      text: widget.userProfile?.fullName ?? '',
-    );
-    _emailController = TextEditingController(
-      text: widget.userProfile?.email ?? '',
-    );
-    _bioController = TextEditingController(text: widget.userProfile?.bio ?? '');
-    _locationController = TextEditingController(
-      text: widget.userProfile?.location ?? '',
-    );
-    _phoneController = TextEditingController(
-      text: widget.userProfile?.phoneNumber ?? '',
-    );
-    _experienceController = TextEditingController(
-      text: widget.userProfile?.experienceYears?.toString() ?? '0',
-    );
-    _skillsController = TextEditingController(
-      text: (widget.userProfile?.skills ?? []).join(', '),
-    );
-    _profilePictureController = TextEditingController(
-      text: widget.userProfile?.profilePicture ?? '',
-    );
-  }
-
-  @override
-  void didUpdateWidget(covariant UserCard oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.userProfile != widget.userProfile) {
-      _nameController.text = widget.userProfile?.fullName ?? '';
-      _emailController.text = widget.userProfile?.email ?? '';
-      _bioController.text = widget.userProfile?.bio ?? '';
-      _locationController.text = widget.userProfile?.location ?? '';
-      _phoneController.text = widget.userProfile?.phoneNumber ?? '';
-      _experienceController.text =
-          widget.userProfile?.experienceYears?.toString() ?? '';
-      _skillsController.text = (widget.userProfile?.skills ?? []).join(', ');
-      _profilePictureController.text = widget.userProfile?.profilePicture ?? '';
     }
   }
 
@@ -280,8 +321,6 @@ class _UserCardState extends State<UserCard> {
   }
 
   Future<void> _handleSave() async {
-    print('Starting save process...');
-
     if (_nameController.text.isEmpty || _emailController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Name and email are required')),
@@ -291,7 +330,6 @@ class _UserCardState extends State<UserCard> {
 
     setState(() => _isLoading = true);
     try {
-      // Parse experience years
       int? exp;
       if (_experienceController.text.trim().isNotEmpty) {
         exp = int.tryParse(_experienceController.text.trim());
@@ -305,14 +343,12 @@ class _UserCardState extends State<UserCard> {
         }
       }
 
-      // Parse skills as comma-separated list
       final skills = _skillsController.text
           .split(',')
           .map((e) => e.trim())
           .where((e) => e.isNotEmpty)
           .toList();
 
-      // Create the updated profile
       final updatedProfile = UserProfile(
         id: widget.userProfile?.id ?? '',
         username:
@@ -335,9 +371,7 @@ class _UserCardState extends State<UserCard> {
         active: widget.userProfile?.active ?? true,
       );
 
-      // Call the onSave function
       await widget.onSave(updatedProfile);
-
       setState(() => _isEditing = false);
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -360,6 +394,73 @@ class _UserCardState extends State<UserCard> {
         setState(() => _isLoading = false);
       }
     }
+  }
+
+  Widget _buildProfileImage() {
+    if (_isUploading || _isDeleting) {
+      return Container(
+        width: 100,
+        height: 100,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.grey[200],
+        ),
+        child: Center(
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            valueColor: AlwaysStoppedAnimation<Color>(
+              Theme.of(context).primaryColor,
+            ),
+          ),
+        ),
+      );
+    }
+
+    final imageUrl = _currentProfilePictureUrl;
+
+    if (imageUrl == null || imageUrl.isEmpty) {
+      return CircleAvatar(
+        radius: 50,
+        backgroundColor: Colors.grey[200],
+        child: const Icon(Icons.person, size: 50, color: Colors.grey),
+      );
+    }
+
+    return ClipOval(
+      child: Image.network(
+        imageUrl,
+        width: 100,
+        height: 100,
+        fit: BoxFit.cover,
+        key: ValueKey(imageUrl), // Force rebuild when URL changes
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Container(
+            width: 100,
+            height: 100,
+            decoration: BoxDecoration(
+              color: Colors.grey[200],
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: CircularProgressIndicator(
+                value: loadingProgress.expectedTotalBytes != null
+                    ? loadingProgress.cumulativeBytesLoaded /
+                          loadingProgress.expectedTotalBytes!
+                    : null,
+              ),
+            ),
+          );
+        },
+        errorBuilder: (context, error, stackTrace) {
+          return CircleAvatar(
+            radius: 50,
+            backgroundColor: Colors.grey[200],
+            child: const Icon(Icons.error, color: Colors.red),
+          );
+        },
+      ),
+    );
   }
 
   @override
@@ -388,48 +489,15 @@ class _UserCardState extends State<UserCard> {
               Column(
                 children: [
                   const SizedBox(height: 24),
-                  // Profile Picture
                   Stack(
                     children: [
-                      _isUploading || _isDeleting
-                          ? Container(
-                              width: 100,
-                              height: 100,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.grey[200],
-                              ),
-                              child: Center(
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                    Theme.of(context).primaryColor,
-                                  ),
-                                ),
-                              ),
-                            )
-                          : CircleAvatar(
-                              radius: 50,
-                              backgroundColor: Colors.grey[200],
-                              backgroundImage:
-                                  _profilePictureController.text.isNotEmpty
-                                  ? NetworkImage(_profilePictureController.text)
-                                  : null,
-                              child: _profilePictureController.text.isEmpty
-                                  ? const Icon(
-                                      Icons.person,
-                                      size: 50,
-                                      color: Colors.grey,
-                                    )
-                                  : null,
-                            ),
+                      _buildProfileImage(),
                       if (_isEditing)
                         Positioned(
                           bottom: 0,
                           right: 0,
                           child: Row(
                             children: [
-                              // Upload button
                               InkWell(
                                 onTap: _isUploading || _isDeleting
                                     ? null
@@ -455,10 +523,8 @@ class _UserCardState extends State<UserCard> {
                                   ),
                                 ),
                               ),
-                              // Delete button
-                              if (_profilePictureController
-                                  .text
-                                  .isNotEmpty) ...[
+                              if (_currentProfilePictureUrl != null &&
+                                  _currentProfilePictureUrl!.isNotEmpty) ...[
                                 const SizedBox(width: 8),
                                 InkWell(
                                   onTap: _isUploading || _isDeleting
@@ -492,7 +558,6 @@ class _UserCardState extends State<UserCard> {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  // Name
                   Center(
                     child: Text(
                       _isEditing
@@ -507,7 +572,6 @@ class _UserCardState extends State<UserCard> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  // Bio
                   if (widget.userProfile?.bio?.isNotEmpty == true &&
                       !_isEditing)
                     Padding(
@@ -529,22 +593,7 @@ class _UserCardState extends State<UserCard> {
                     setState(() {
                       _isEditing = !_isEditing;
                       if (!_isEditing) {
-                        // Reset controllers when canceling edit
-                        _nameController.text =
-                            widget.userProfile?.fullName ?? '';
-                        _emailController.text = widget.userProfile?.email ?? '';
-                        _bioController.text = widget.userProfile?.bio ?? '';
-                        _locationController.text =
-                            widget.userProfile?.location ?? '';
-                        _phoneController.text =
-                            widget.userProfile?.phoneNumber ?? '';
-                        _experienceController.text =
-                            widget.userProfile?.experienceYears?.toString() ??
-                            '';
-                        _skillsController.text =
-                            (widget.userProfile?.skills ?? []).join(', ');
-                        _profilePictureController.text =
-                            widget.userProfile?.profilePicture ?? '';
+                        _updateControllersFromProfile();
                       }
                     });
                   },
@@ -552,9 +601,7 @@ class _UserCardState extends State<UserCard> {
             ],
           ),
           const SizedBox(height: 24),
-          // Edit Form / View Mode
           _isEditing ? _buildEditForm() : _buildViewMode(),
-          // Save Button (only in edit mode)
           if (_isEditing) ...[
             const SizedBox(height: 24),
             SizedBox(
@@ -604,14 +651,6 @@ class _UserCardState extends State<UserCard> {
         ),
         const SizedBox(height: 16.0),
         UserCardInput(
-          title: 'Email',
-          placeholder: 'Enter your email',
-          controller: _emailController,
-          keyboardType: TextInputType.emailAddress,
-          enabled: !_isLoading,
-        ),
-        const SizedBox(height: 16.0),
-        UserCardInput(
           title: 'Bio',
           placeholder: 'Tell us about yourself',
           controller: _bioController,
@@ -648,14 +687,6 @@ class _UserCardState extends State<UserCard> {
           controller: _skillsController,
           enabled: !_isLoading,
         ),
-        const SizedBox(height: 16.0),
-        UserCardInput(
-          title: 'Profile Picture URL',
-          placeholder: 'https://... (optional)',
-          controller: _profilePictureController,
-          keyboardType: TextInputType.url,
-          enabled: !_isLoading,
-        ),
       ],
     );
   }
@@ -664,8 +695,8 @@ class _UserCardState extends State<UserCard> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Padding(
-          padding: const EdgeInsets.only(bottom: 8),
+        const Padding(
+          padding: EdgeInsets.only(bottom: 8),
           child: Text(
             'Personal Information',
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
@@ -677,10 +708,10 @@ class _UserCardState extends State<UserCard> {
             widget.userProfile!.email,
             'Email Address',
           ),
-          if (widget.userProfile?.fullName?.isNotEmpty == true)
+          if (widget.userProfile?.fullName.isNotEmpty == true)
             _buildInfoRow(
               Icons.person,
-              widget.userProfile!.fullName!,
+              widget.userProfile!.fullName,
               'Full Name',
             ),
           if (widget.userProfile?.location?.isNotEmpty == true)
@@ -701,10 +732,10 @@ class _UserCardState extends State<UserCard> {
               '${widget.userProfile!.experienceYears} years of experience',
               'Experience',
             ),
-          if (widget.userProfile?.skills?.isNotEmpty == true)
+          if (widget.userProfile?.skills.isNotEmpty == true)
             _buildInfoRow(
               Icons.code,
-              widget.userProfile!.skills!.join(', '),
+              widget.userProfile!.skills.join(', '),
               'Skills',
             ),
         ] else
@@ -730,8 +761,7 @@ class _UserCardState extends State<UserCard> {
             padding: const EdgeInsets.only(left: 12.0),
             child: Text(
               key,
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-              textAlign: TextAlign.start,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
             ),
           ),
           Container(
@@ -760,7 +790,6 @@ class _UserCardState extends State<UserCard> {
                 Expanded(
                   child: Text(
                     value,
-                    textAlign: TextAlign.start,
                     style: const TextStyle(fontSize: 15, height: 1.4),
                   ),
                 ),
@@ -773,68 +802,9 @@ class _UserCardState extends State<UserCard> {
   }
 }
 
-class UserCardInput extends StatelessWidget {
-  final String title;
-  final String placeholder;
-  final TextEditingController controller;
-  final TextInputType? keyboardType;
-  final int? maxLines;
-  final bool enabled;
-
-  const UserCardInput({
-    super.key,
-    required this.title,
-    required this.placeholder,
-    required this.controller,
-    this.keyboardType,
-    this.maxLines = 1,
-    this.enabled = true,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: Colors.black87,
-          ),
-        ),
-        const SizedBox(height: 6),
-        Container(
-          decoration: BoxDecoration(
-            color: enabled ? Colors.grey[100] : Colors.grey[200],
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey[300]!),
-          ),
-          child: TextField(
-            controller: controller,
-            keyboardType: keyboardType,
-            maxLines: maxLines,
-            enabled: enabled,
-            decoration: InputDecoration(
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 14,
-              ),
-              hintText: placeholder,
-              hintStyle: TextStyle(color: Colors.grey[500]),
-              border: InputBorder.none,
-              isDense: true,
-            ),
-            style: const TextStyle(fontSize: 15),
-          ),
-        ),
-      ],
-    );
-  }
-}
 
 
 
 
-// save changes
+
+// Image.network
