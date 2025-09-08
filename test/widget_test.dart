@@ -9,22 +9,41 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:job_gen_mobile/main.dart';
+import 'package:job_gen_mobile/user_profile_injection_container.dart' as di;
+import 'package:job_gen_mobile/features/user_profile/domain/usecases/user_profile/get_user_profile.dart';
+import 'package:job_gen_mobile/features/user_profile/domain/usecases/user_profile/update_user_profile.dart';
+import 'package:job_gen_mobile/features/user_profile/domain/usecases/user_profile/delete_account.dart';
+import 'package:job_gen_mobile/features/user_profile/domain/usecases/user_profile/delete_profile_picture.dart';
+import 'package:job_gen_mobile/features/user_profile/domain/usecases/user_profile/get_profile_picture.dart';
+import 'package:job_gen_mobile/features/user_profile/domain/usecases/user_profile/update_profile_pricture.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
+  testWidgets('App builds', (WidgetTester tester) async {
+    // Initialize service locator
+    TestWidgetsFlutterBinding.ensureInitialized();
+    await di.init();
+
+    final getUserProfile = di.sl<GetUserProfile>();
+    final updateUserProfile = di.sl<UpdateUserProfile>();
+    final deleteAccount = di.sl<DeleteAccount>();
+    final getProfilePicture = di.sl<GetProfilePicture>();
+    final updateProfilePicture = di.sl<UpdateProfilePicture>();
+    final deleteProfilePicture = di.sl<DeleteProfilePicture>();
+
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(
+      MyApp(
+        getUserProfile: getUserProfile,
+        updateUserProfile: updateUserProfile,
+        deleteAccount: deleteAccount,
+        getProfilePicture: getProfilePicture,
+        updateProfilePicture: updateProfilePicture,
+        deleteProfilePicture: deleteProfilePicture,
+        isAuthenticated: false,
+      ),
+    );
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
-
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    // Sanity check: app renders a MaterialApp
+    expect(find.byType(MaterialApp), findsOneWidget);
   });
 }

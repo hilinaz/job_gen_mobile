@@ -8,7 +8,8 @@ plugins {
 android {
     namespace = "com.example.job_gen_mobile"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    // Use the specific NDK version that's installed
+    ndkVersion = "29.0.14033849"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11

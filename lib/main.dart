@@ -33,6 +33,9 @@ import 'package:job_gen_mobile/features/jobs/presentation/pages/job_listing_page
 import 'package:job_gen_mobile/features/jobs/presentation/pages/job_detail_page.dart';
 import 'package:job_gen_mobile/features/jobs/presentation/pages/job_stats_page.dart';
 
+// User Profile
+import 'package:job_gen_mobile/features/user_profile/presentation/pages/user_profile_page.dart';
+
 import 'injection_container.dart' as di;
 
 Future<void> main() async {
@@ -168,6 +171,19 @@ class MyApp extends StatelessWidget {
           '/job_listing': (_) => JobListingPage(),
           '/job_detail': (_) => const JobDetailPage(),
           '/job_stats': (_) => const JobStatsPage(),
+          
+          // User Profile
+          '/profile': (_) => UserProfilePage(
+            getUserProfile: di.sl(),
+            updateUserProfile: di.sl(),
+            deleteAccount: di.sl(),
+            getProfilePicture: di.sl(),
+            updateProfilePicture: di.sl(),
+            deleteProfilePicture: di.sl(),
+            fileRepository: di.sl(),
+            getUserFiles: di.sl(),
+            getCurrentUserFiles: di.sl(),
+          ),
         },
       ),
     );

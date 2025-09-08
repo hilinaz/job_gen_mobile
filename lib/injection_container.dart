@@ -3,6 +3,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'core/network/dio_client.dart';
 import 'core/network/network_info.dart';
 
+// User Profile
+import 'package:job_gen_mobile/user_profile_injection_container.dart' as user_profile;
+
+// Files
+import 'package:job_gen_mobile/features/files/files_injection_container.dart';
+
 // AUTH
 import 'package:job_gen_mobile/features/auth/data/datasources/auth_remote_datasource.dart';
 import 'package:job_gen_mobile/features/auth/data/repositories/auth_repository_impl.dart';
@@ -71,6 +77,12 @@ Future<void> init() async {
 
   // Core
   sl.registerLazySingleton<NetworkInfo>(() => NetworkInfoImpl());
+  
+  // Initialize User Profile feature
+  await user_profile.init();
+  
+  // Initialize Files feature
+  await sl.registerFilesFeature();
 
   // AUTH
   sl.registerFactory(
