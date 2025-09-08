@@ -17,11 +17,17 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 
 // Import web utilities conditionally
 // For web platform
-import 'package:universal_html/html.dart' if (dart.library.io) 'package:job_gen_mobile/features/user_profile/presentation/utils/web_stubs.dart' as html;
+import 'package:universal_html/html.dart'
+    if (dart.library.io) 'package:job_gen_mobile/features/user_profile/presentation/utils/web_stubs.dart'
+    as html;
 
 // For platformViewRegistry
 import 'package:flutter/services.dart';
-import 'package:job_gen_mobile/features/user_profile/presentation/utils/web_stubs.dart' if (dart.library.html) 'dart:ui' as ui;
+
+// Import for web-specific code
+// This is a workaround for conditional imports with dart:ui
+import 'package:job_gen_mobile/features/user_profile/presentation/utils/platform_view_registry.dart'
+    as platform_registry;
 
 class CVCard extends StatefulWidget {
   final JgFile? cvFile;
@@ -769,16 +775,13 @@ class _CVCardState extends State<CVCard> {
     // Register the platform view
     if (kIsWeb) {
       // Use platformViewRegistry on web only
-      // ignore: undefined_prefixed_name
-      ui.platformViewRegistry.registerViewFactory('pdf-viewer-$url', (
-      int viewId,
-    ) {
-      final iframe = html.IFrameElement();
-      iframe.style.width = '100%';
-      iframe.style.height = '100%';
-      iframe.src = url;
-      return iframe;
-    });
+      platform_registry.registerViewFactory('pdf-viewer-$url', (int viewId) {
+        final iframe = html.IFrameElement();
+        iframe.style.width = '100%';
+        iframe.style.height = '100%';
+        iframe.src = url;
+        return iframe;
+      });
     }
 
     if (!mounted) return;

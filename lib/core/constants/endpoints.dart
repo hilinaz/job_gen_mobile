@@ -41,4 +41,13 @@ class Endpoints {
   static String profilePicByUserId(String userId) => '/files/profile-picture/$userId';
   static String downloadFile(String fileId) => '/files/$fileId';
   static String deleteFile(String fileId) => '/files/$fileId';
+
+  //Chatbot endpoints
+  static const sendChatMessage = '/chat/message';
+  static const getChatSessions = '/chat/sessions';
+  static const getChatSessionById = '/chat/session';
+  static const deleteChatSession = '/chat/session';  
+  
+  //contact
+  static const contact = '/contact';
 }

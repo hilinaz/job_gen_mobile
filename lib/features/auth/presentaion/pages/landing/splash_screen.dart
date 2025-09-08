@@ -23,25 +23,72 @@ class SplashScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Top Row with just logo and app name
+                // Top Row with logo, app name, and menu
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Container(
-                      width: 35,
-                      height: 35,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 2),
-                      ),
+                    Row(
+                      children: [
+                        Container(
+                          width: 35,
+                          height: 35,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 2),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        const Text(
+                          'JobGen',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 12),
-                    const Text(
-                      'JobGen',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
+                    // Hamburger Menu
+                    PopupMenuButton<String>(
+                      icon: const Icon(Icons.menu, color: Colors.white),
+                      color: Colors.white,
+                      elevation: 8,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
+                      onSelected: (value) {
+                        switch (value) {
+                          case 'login':
+                            Navigator.pushNamed(context, '/sign_in');
+                            break;
+                          case 'try_free':
+                            Navigator.pushNamed(context, '/job_listing');
+                            break;
+                        }
+                      },
+                      itemBuilder: (context) => [
+                        PopupMenuItem(
+                          value: 'login',
+                          child: Row(
+                            children: const [
+                              Icon(Icons.login, color: Colors.black87),
+                              SizedBox(width: 12),
+                              Text('Login'),
+                            ],
+                          ),
+                        ),
+                        const PopupMenuDivider(),
+                        PopupMenuItem(
+                          value: 'try_free',
+                          child: Row(
+                            children: const [
+                              Icon(Icons.star_border, color: Colors.black87),
+                              SizedBox(width: 12),
+                              Text('Try for Free'),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
