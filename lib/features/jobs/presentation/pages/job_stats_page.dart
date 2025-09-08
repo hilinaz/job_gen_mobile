@@ -26,7 +26,7 @@ class _JobStatsPageState extends State<JobStatsPage> {
         backgroundColor: const Color(0xFF7BBFB3),
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
             Navigator.pop(context);
           },

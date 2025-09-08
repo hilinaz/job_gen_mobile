@@ -6,6 +6,7 @@ import 'package:job_gen_mobile/features/auth/presentaion/bloc/auth_bloc.dart';
 import 'package:job_gen_mobile/core/utils/role_manager.dart';
 import '../widgets/widget.dart';
 
+
 enum SearchType { keyword, skill }
 
 class JobListingPage extends StatefulWidget {
@@ -27,18 +28,14 @@ class _JobListingPageState extends State<JobListingPage>
   final ScrollController _allScroll = ScrollController();
   int _allPage = 1;
   bool _isLoadingMoreAll = false;
-  bool _isAdmin = false; // Add this line to track admin status
+  bool _isAdmin = false;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
     _tabController.addListener(_onTabChanged);
-
-    // Check if user is admin
     _checkAdminRole();
-
-    // Load Trending on open
     context.read<JobsBloc>().add(GetTrendingJobsEvent());
     _allScroll.addListener(_onAllScroll);
   }
@@ -51,7 +48,6 @@ class _JobListingPageState extends State<JobListingPage>
     super.dispose();
   }
 
-  // Add this method to check admin role
   Future<void> _checkAdminRole() async {
     final isAdmin = await RoleManager.hasAdminAccess();
     if (mounted) {
@@ -62,7 +58,7 @@ class _JobListingPageState extends State<JobListingPage>
   }
 
   void _onAllScroll() {
-    if (_tabController.index != 2) return; // Only on All tab
+    if (_tabController.index != 2) return;
     if (_isLoadingMoreAll) return;
     if (!_allScroll.hasClients) return;
     final pos = _allScroll.position;
@@ -77,9 +73,7 @@ class _JobListingPageState extends State<JobListingPage>
   }
 
   Future<void> _handleLogout() async {
-    // Show a quick confirmation and then dispatch logout
     context.read<AuthBloc>().add(SignOutEvent());
-    // Wait a short moment to avoid visible loading loop on current page
     await Future.delayed(const Duration(milliseconds: 150));
     if (!mounted) return;
     Navigator.pushNamedAndRemoveUntil(context, '/sign_in', (route) => false);
@@ -89,13 +83,13 @@ class _JobListingPageState extends State<JobListingPage>
     if (_tabController.indexIsChanging) return;
     final bloc = context.read<JobsBloc>();
     switch (_tabController.index) {
-      case 0: // Trending
+      case 0:
         bloc.add(GetTrendingJobsEvent());
         break;
-      case 1: // For You
+      case 1:
         bloc.add(GetMatchedJobsEvent());
         break;
-      case 2: // All
+      case 2:
         bloc.add(GetJobsEvent());
         break;
     }
@@ -133,6 +127,25 @@ class _JobListingPageState extends State<JobListingPage>
         GetJobsBySearchEvent(searchParam: value.trim()),
       );
     }
+  }
+
+  List<JobModel> _filterJobs(List<JobModel> jobs) {
+    final query = _searchController.text.toLowerCase();
+    if (_searchType == SearchType.skill && _skills.isNotEmpty) {
+      return jobs.where((job) {
+        return _skills.any(
+          (skill) =>
+              job.title.toLowerCase().contains(skill.toLowerCase()) ||
+              job.description.toLowerCase().contains(skill.toLowerCase()),
+        );
+      }).toList();
+    } else if (_searchType == SearchType.keyword && query.isNotEmpty) {
+      return jobs.where((job) {
+        return job.title.toLowerCase().contains(query) ||
+            job.description.toLowerCase().contains(query);
+      }).toList();
+    }
+    return jobs;
   }
 
   @override
@@ -207,6 +220,11 @@ class _JobListingPageState extends State<JobListingPage>
                   if (!mounted) return;
                   Navigator.pushNamed(context, '/admin_dashboard');
                   break;
+                case 'feedback':
+                  if (!mounted) return;
+                   Navigator.pushNamed(context, '/contact');
+                  
+                  break;
                 case 'logout':
                   await _handleLogout();
                   break;
@@ -253,9 +271,21 @@ class _JobListingPageState extends State<JobListingPage>
                     ),
                   ),
                 ),
+                PopupMenuItem(
+                  value: 'feedback',
+                  child: SizedBox(
+                    width: 220,
+                    child: Row(
+                      children: const [
+                        Icon(Icons.feedback_outlined, color: Colors.black87),
+                        SizedBox(width: 12),
+                        Text('Feedback'),
+                      ],
+                    ),
+                  ),
+                ),
               ];
 
-              // Add admin dashboard option if user is admin
               if (_isAdmin) {
                 menuItems.add(
                   PopupMenuItem(
@@ -273,8 +303,7 @@ class _JobListingPageState extends State<JobListingPage>
                   ),
                 );
               }
-              
-              // Add divider and logout option
+
               menuItems.add(const PopupMenuDivider());
               menuItems.add(
                 PopupMenuItem(
@@ -419,11 +448,9 @@ class _JobListingPageState extends State<JobListingPage>
               Tab(text: 'All'),
             ],
           ),
-
           Expanded(
             child: MultiBlocListener(
               listeners: [
-                // Only keep caching for All (pagination). For You handled via bloc fallback
                 BlocListener<JobsBloc, JobsState>(
                   listenWhen: (p, c) => c is GotJobsState,
                   listener: (context, state) {
@@ -448,8 +475,7 @@ class _JobListingPageState extends State<JobListingPage>
                   _buildJobsTabFromState(
                     selector: (state) {
                       if (state is GotMatchedJobsState) return state.jobs;
-                      if (state is GotJobsState)
-                        return state.jobs; // fallback to all
+                      if (state is GotJobsState) return state.jobs;
                       return const <JobModel>[];
                     },
                   ),
@@ -466,7 +492,6 @@ class _JobListingPageState extends State<JobListingPage>
     );
   }
 
-  /// Generic builder for a jobs tab
   Widget _buildJobsTab({
     required List<JobModel> Function() dataProvider,
     ScrollController? controller,
@@ -483,11 +508,9 @@ class _JobListingPageState extends State<JobListingPage>
           }
         }
         final filteredJobs = _filterJobs(jobs);
-
         if (filteredJobs.isEmpty) {
           return const Center(child: Text('No jobs found.'));
         }
-
         return ListView.builder(
           padding: const EdgeInsets.all(16),
           itemCount: filteredJobs.length,
@@ -512,7 +535,6 @@ class _JobListingPageState extends State<JobListingPage>
     );
   }
 
-  /// Builder for tabs that read from bloc (Trending, For You)
   Widget _buildJobsTabFromState({
     required List<JobModel> Function(JobsState state) selector,
   }) {
@@ -550,27 +572,5 @@ class _JobListingPageState extends State<JobListingPage>
         );
       },
     );
-  }
-
-  /// Filters a list of JobModel based on search type
-  List<JobModel> _filterJobs(List<JobModel> jobs) {
-    final query = _searchController.text.toLowerCase();
-
-    if (_searchType == SearchType.skill && _skills.isNotEmpty) {
-      return jobs.where((job) {
-        return _skills.any(
-          (skill) =>
-              job.title.toLowerCase().contains(skill.toLowerCase()) ||
-              job.description.toLowerCase().contains(skill.toLowerCase()),
-        );
-      }).toList();
-    } else if (_searchType == SearchType.keyword && query.isNotEmpty) {
-      return jobs.where((job) {
-        return job.title.toLowerCase().contains(query) ||
-            job.description.toLowerCase().contains(query);
-      }).toList();
-    }
-
-    return jobs;
   }
 }
