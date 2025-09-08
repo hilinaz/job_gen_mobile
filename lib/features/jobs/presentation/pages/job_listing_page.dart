@@ -274,7 +274,7 @@ class _JobListingPageState extends State<JobListingPage>
                   ),
                 );
               }
-              
+
               // Add divider and logout option
               menuItems.add(const PopupMenuDivider());
               menuItems.add(
