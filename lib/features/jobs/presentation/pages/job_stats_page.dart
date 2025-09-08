@@ -54,9 +54,8 @@ class _JobStatsPageState extends State<JobStatsPage> {
                   );
                   break;
                 case 'chatbot':
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Chatbot coming soon')),
-                  );
+                  if (!mounted) return;
+                  Navigator.pushNamed(context, '/chatbot_landing');
                   break;
                 case 'logout':
                   await _handleLogout();

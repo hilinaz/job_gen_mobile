@@ -200,9 +200,8 @@ class _JobListingPageState extends State<JobListingPage>
                   Navigator.pushNamed(context, '/job_stats');
                   break;
                 case 'chatbot':
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Chatbot coming soon')),
-                  );
+                  if (!mounted) return;
+                  Navigator.pushNamed(context, '/chatbot_landing');
                   break;
                 case 'admin_dashboard':
                   if (!mounted) return;

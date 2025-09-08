@@ -56,6 +56,15 @@ import 'package:job_gen_mobile/features/jobs/domain/usecases/get_matched_jobs.da
 import 'package:job_gen_mobile/features/jobs/domain/usecases/get_trending_jobs.dart';
 import 'package:job_gen_mobile/features/jobs/presentation/bloc/jobs_bloc.dart';
 
+//CHAT
+import 'package:job_gen_mobile/features/chatbot/data/datasources/chat_remote_datasource.dart';
+import 'package:job_gen_mobile/features/chatbot/data/repositories/chat_repository_impl.dart';
+import 'package:job_gen_mobile/features/chatbot/domain/repositories/chat_repository.dart';
+import 'package:job_gen_mobile/features/chatbot/domain/usecases/send_message.dart';
+import 'package:job_gen_mobile/features/chatbot/domain/usecases/get_user_sessions.dart';
+import 'package:job_gen_mobile/features/chatbot/domain/usecases/get_session_history.dart';
+import 'package:job_gen_mobile/features/chatbot/domain/usecases/delete_session.dart';
+
 final sl = GetIt.instance;
 
 Future<void> init() async {
@@ -183,4 +192,23 @@ Future<void> init() async {
       getJobBySource: sl(),
     ),
   );
+
+  // CHAT
+  // Data source
+  sl.registerLazySingleton<ChatRemoteDataSource>(
+    () => ChatRemoteDataSourceImpl(sl()),
+  );
+
+  // Repository
+  sl.registerLazySingleton<ChatRepository>(
+    () => ChatRepositoryImpl(sl()),
+  );
+
+  // Use cases
+  sl.registerLazySingleton(() => SendMessage(sl()));
+  sl.registerLazySingleton(() => GetUserSessions(sl()));
+  sl.registerLazySingleton(() => GetSessionHistory(sl()));
+  sl.registerLazySingleton(() => DeleteSession(sl()));
+
+
 }

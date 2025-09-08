@@ -25,4 +25,10 @@ class Endpoints {
   static const jobBySkill = '/jobs/search-by-skills';
   static const jobSearch = '/jobs/search';
   static const matchedJobs = '/jobs/matched';
+
+  //Chatbot endpoints
+  static const sendChatMessage = '/chat/message';
+  static const getChatSessions = '/chat/sessions';
+  static const getChatSessionById = '/chat/session';
+  static const deleteChatSession = '/chat/session';  
 }

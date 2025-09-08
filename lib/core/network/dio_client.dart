@@ -24,9 +24,9 @@ Dio buildDio({
   
   final dio = Dio(BaseOptions(
     baseUrl: effectiveBaseUrl,
-    connectTimeout: const Duration(seconds: 30),
-    receiveTimeout: const Duration(seconds: 60),
-    sendTimeout: const Duration(seconds: 30),
+    connectTimeout: const Duration(seconds: 60),
+    receiveTimeout: const Duration(minutes: 3),
+    sendTimeout: const Duration(seconds: 60),
     headers: {'Content-Type': 'application/json'},
     // Don't throw an error on 404 - we'll handle it in the repository layer
     validateStatus: (status) => status != null && status < 500,
