@@ -1,5 +1,4 @@
 import 'dart:typed_data';
-import 'dart:ui_web' as ui;
 import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
@@ -11,7 +10,18 @@ import 'package:job_gen_mobile/features/files/domain/usecases/get_user_files.dar
 import 'package:job_gen_mobile/features/files/presentation/bloc/files_bloc.dart';
 import 'package:job_gen_mobile/features/files/presentation/bloc/files_bloc_state.dart';
 import 'package:job_gen_mobile/features/user_profile/presentation/pages/cv_viewer_page.dart';
-import 'package:universal_html/html.dart' as html;
+
+// Use conditional imports
+// This import is only used on web platforms
+import 'package:flutter/foundation.dart' show kIsWeb;
+
+// Import web utilities conditionally
+// For web platform
+import 'package:universal_html/html.dart' if (dart.library.io) 'package:job_gen_mobile/features/user_profile/presentation/utils/web_stubs.dart' as html;
+
+// For platformViewRegistry
+import 'package:flutter/services.dart';
+import 'package:job_gen_mobile/features/user_profile/presentation/utils/web_stubs.dart' if (dart.library.html) 'dart:ui' as ui;
 
 class CVCard extends StatefulWidget {
   final JgFile? cvFile;
@@ -125,10 +135,10 @@ class _CVCardState extends State<CVCard> {
 
   Future<void> _saveFile(Uint8List bytes, String fileName) async {
     try {
-      final blob = html.Blob([bytes]);
-
-      // Create and trigger download using window.open for web
       if (kIsWeb) {
+        final blob = html.Blob([bytes]);
+
+        // Create and trigger download using window.open for web
         final downloadUrl = html.Url.createObjectUrl(blob);
         final downloadLink = html.AnchorElement(href: downloadUrl)
           ..setAttribute('download', fileName)
@@ -142,6 +152,10 @@ class _CVCardState extends State<CVCard> {
           downloadLink.remove();
           html.Url.revokeObjectUrl(downloadUrl);
         });
+      } else {
+        // For mobile, you might want to open the file or show a dialog
+        // For now, just print the file path
+        print('File saved to: $fileName');
       }
     } catch (e) {
       _showSnackBar('Failed to save file: $e');
@@ -753,8 +767,10 @@ class _CVCardState extends State<CVCard> {
     final url = html.Url.createObjectUrlFromBlob(blob);
 
     // Register the platform view
-    // ignore: undefined_prefixed_name
-    ui.platformViewRegistry.registerViewFactory('pdf-viewer-$url', (
+    if (kIsWeb) {
+      // Use platformViewRegistry on web only
+      // ignore: undefined_prefixed_name
+      ui.platformViewRegistry.registerViewFactory('pdf-viewer-$url', (
       int viewId,
     ) {
       final iframe = html.IFrameElement();
@@ -763,6 +779,7 @@ class _CVCardState extends State<CVCard> {
       iframe.src = url;
       return iframe;
     });
+    }
 
     if (!mounted) return;
 

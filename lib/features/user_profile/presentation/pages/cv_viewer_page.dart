@@ -6,8 +6,8 @@ import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 
-// For web platform
-import 'dart:html' as html;
+// For web platform - use conditional import with stub implementation for mobile
+import 'package:universal_html/html.dart' if (dart.library.io) 'package:job_gen_mobile/features/user_profile/presentation/utils/web_stubs.dart' as html;
 
 class CVViewerPage extends StatefulWidget {
   final Uint8List fileBytes;
