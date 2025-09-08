@@ -25,4 +25,6 @@ class Endpoints {
   static const jobBySkill = '/jobs/search-by-skills';
   static const jobSearch = '/jobs/search';
   static const matchedJobs = '/jobs/matched';
+
+  
 }

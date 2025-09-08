@@ -25,6 +25,12 @@ class _JobStatsPageState extends State<JobStatsPage> {
       appBar: AppBar(
         backgroundColor: const Color(0xFF7BBFB3),
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
         title: const Text(
           'Job Stats',
           style: TextStyle(fontWeight: FontWeight.bold),

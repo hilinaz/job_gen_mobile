@@ -22,8 +22,7 @@ class _JobListingPageState extends State<JobListingPage>
   late TabController _tabController;
   bool _isSearching = false;
   SearchType _searchType = SearchType.keyword;
-  List<JobModel> _cachedTrending = [];
-  List<JobModel> _cachedMatched = [];
+
   List<JobModel> _cachedAll = [];
   final ScrollController _allScroll = ScrollController();
   int _allPage = 1;
