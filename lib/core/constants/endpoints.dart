@@ -26,5 +26,6 @@ class Endpoints {
   static const jobSearch = '/jobs/search';
   static const matchedJobs = '/jobs/matched';
 
-  
+  //contact
+  static const contact = '/contact';
 }
