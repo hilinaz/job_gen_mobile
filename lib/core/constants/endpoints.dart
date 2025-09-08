@@ -26,6 +26,23 @@ class Endpoints {
   static const jobSearch = '/jobs/search';
   static const matchedJobs = '/jobs/matched';
 
+  // User Profile endpoints
+  static const getProfile = '/users/profile';
+  static const updateProfile = '/users/profile';
+  static const deleteProfile = '/users/account';
+
+  // Files endpoints
+  static const uploadProfile = '/files/upload/profile';
+  static const uploadDocument = '/files/upload/document';
+  static const myProfilePic = '/files/profile-picture/me';
+  // Note: There is no general /files endpoint in the backend
+
   //contact
   static const contact = '/contact';
+
+  // Methods for dynamic endpoints
+  static String profilePicByUserId(String userId) =>
+      '/files/profile-picture/$userId';
+  static String downloadFile(String fileId) => '/files/$fileId';
+  static String deleteFile(String fileId) => '/files/$fileId';
 }

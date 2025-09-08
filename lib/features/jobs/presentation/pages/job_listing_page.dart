@@ -206,9 +206,8 @@ class _JobListingPageState extends State<JobListingPage>
                   onSelected: (value) async {
                     switch (value) {
                       case 'profile':
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Profile coming soon')),
-                        );
+                       if (!mounted) return;
+                        Navigator.pushNamed(context, '/profile');
                         break;
                       case 'jobstats':
                         if (!mounted) return;
