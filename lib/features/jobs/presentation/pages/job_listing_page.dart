@@ -6,7 +6,6 @@ import 'package:job_gen_mobile/features/auth/presentaion/bloc/auth_bloc.dart';
 import 'package:job_gen_mobile/core/utils/role_manager.dart';
 import '../widgets/widget.dart';
 
-
 enum SearchType { keyword, skill }
 
 class JobListingPage extends StatefulWidget {
@@ -150,6 +149,9 @@ class _JobListingPageState extends State<JobListingPage>
 
   @override
   Widget build(BuildContext context) {
+    final authState = context.watch<AuthBloc>().state;
+    final bool isLoggedIn = authState is SignedInState;
+
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
@@ -192,151 +194,164 @@ class _JobListingPageState extends State<JobListingPage>
             ],
           ),
         ),
-        actions: [
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.menu, color: Colors.white),
-            color: Colors.white,
-            elevation: 8,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            onSelected: (value) async {
-              switch (value) {
-                case 'profile':
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Profile coming soon')),
-                  );
-                  break;
-                case 'jobstats':
-                  if (!mounted) return;
-                  Navigator.pushNamed(context, '/job_stats');
-                  break;
-                case 'chatbot':
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Chatbot coming soon')),
-                  );
-                  break;
-                case 'admin_dashboard':
-                  if (!mounted) return;
-                  Navigator.pushNamed(context, '/admin_dashboard');
-                  break;
-                case 'feedback':
-                  if (!mounted) return;
-                   Navigator.pushNamed(context, '/contact');
-                  
-                  break;
-                case 'logout':
-                  await _handleLogout();
-                  break;
-              }
-            },
-            itemBuilder: (context) {
-              final menuItems = <PopupMenuEntry<String>>[
-                PopupMenuItem(
-                  value: 'profile',
-                  child: SizedBox(
-                    width: 220,
-                    child: Row(
-                      children: const [
-                        Icon(Icons.person_outline, color: Colors.black87),
-                        SizedBox(width: 12),
-                        Text('Profile'),
-                      ],
-                    ),
+        actions: isLoggedIn
+            ? [
+                PopupMenuButton<String>(
+                  icon: const Icon(Icons.menu, color: Colors.white),
+                  color: Colors.white,
+                  elevation: 8,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                ),
-                PopupMenuItem(
-                  value: 'jobstats',
-                  child: SizedBox(
-                    width: 220,
-                    child: Row(
-                      children: const [
-                        Icon(Icons.bar_chart_outlined, color: Colors.black87),
-                        SizedBox(width: 12),
-                        Text('Job Stats'),
-                      ],
-                    ),
-                  ),
-                ),
-                PopupMenuItem(
-                  value: 'chatbot',
-                  child: SizedBox(
-                    width: 220,
-                    child: Row(
-                      children: const [
-                        Icon(Icons.chat_bubble_outline, color: Colors.black87),
-                        SizedBox(width: 12),
-                        Text('Chatbot'),
-                      ],
-                    ),
-                  ),
-                ),
-                PopupMenuItem(
-                  value: 'feedback',
-                  child: SizedBox(
-                    width: 220,
-                    child: Row(
-                      children: const [
-                        Icon(Icons.feedback_outlined, color: Colors.black87),
-                        SizedBox(width: 12),
-                        Text('Feedback'),
-                      ],
-                    ),
-                  ),
-                ),
-              ];
-
-              if (_isAdmin) {
-                menuItems.add(
-                  PopupMenuItem(
-                    value: 'admin_dashboard',
-                    child: SizedBox(
-                      width: 220,
-                      child: Row(
-                        children: const [
-                          Icon(Icons.admin_panel_settings, color: Colors.blue),
-                          SizedBox(width: 12),
-                          Text('Admin Dashboard'),
-                        ],
+                  onSelected: (value) async {
+                    switch (value) {
+                      case 'profile':
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Profile coming soon')),
+                        );
+                        break;
+                      case 'jobstats':
+                        if (!mounted) return;
+                        Navigator.pushNamed(context, '/job_stats');
+                        break;
+                      case 'chatbot':
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Chatbot coming soon')),
+                        );
+                        break;
+                      case 'admin_dashboard':
+                        if (!mounted) return;
+                        Navigator.pushNamed(context, '/admin_dashboard');
+                        break;
+                      case 'feedback':
+                        if (!mounted) return;
+                        Navigator.pushNamed(context, '/contact');
+                        break;
+                      case 'logout':
+                        await _handleLogout();
+                        break;
+                    }
+                  },
+                  itemBuilder: (context) {
+                    final menuItems = <PopupMenuEntry<String>>[
+                      PopupMenuItem(
+                        value: 'profile',
+                        child: SizedBox(
+                          width: 220,
+                          child: Row(
+                            children: const [
+                              Icon(Icons.person_outline, color: Colors.black87),
+                              SizedBox(width: 12),
+                              Text('Profile'),
+                            ],
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                );
-              }
+                      PopupMenuItem(
+                        value: 'jobstats',
+                        child: SizedBox(
+                          width: 220,
+                          child: Row(
+                            children: const [
+                              Icon(
+                                Icons.bar_chart_outlined,
+                                color: Colors.black87,
+                              ),
+                              SizedBox(width: 12),
+                              Text('Job Stats'),
+                            ],
+                          ),
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: 'chatbot',
+                        child: SizedBox(
+                          width: 220,
+                          child: Row(
+                            children: const [
+                              Icon(
+                                Icons.chat_bubble_outline,
+                                color: Colors.black87,
+                              ),
+                              SizedBox(width: 12),
+                              Text('Chatbot'),
+                            ],
+                          ),
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: 'feedback',
+                        child: SizedBox(
+                          width: 220,
+                          child: Row(
+                            children: const [
+                              Icon(
+                                Icons.feedback_outlined,
+                                color: Colors.black87,
+                              ),
+                              SizedBox(width: 12),
+                              Text('Feedback'),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ];
 
-              menuItems.add(const PopupMenuDivider());
-              menuItems.add(
-                PopupMenuItem(
-                  value: 'logout',
-                  child: SizedBox(
-                    width: 220,
-                    child: Row(
-                      children: const [
-                        Icon(Icons.logout, color: Colors.redAccent),
-                        SizedBox(width: 12),
-                        Text('Logout'),
-                      ],
-                    ),
-                  ),
+                    if (_isAdmin) {
+                      menuItems.add(
+                        PopupMenuItem(
+                          value: 'admin_dashboard',
+                          child: SizedBox(
+                            width: 220,
+                            child: Row(
+                              children: const [
+                                Icon(
+                                  Icons.admin_panel_settings,
+                                  color: Colors.blue,
+                                ),
+                                SizedBox(width: 12),
+                                Text('Admin Dashboard'),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    }
+
+                    menuItems.add(const PopupMenuDivider());
+                    menuItems.add(
+                      PopupMenuItem(
+                        value: 'logout',
+                        child: SizedBox(
+                          width: 220,
+                          child: Row(
+                            children: const [
+                              Icon(Icons.logout, color: Colors.redAccent),
+                              SizedBox(width: 12),
+                              Text('Logout'),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+
+                    return menuItems;
+                  },
                 ),
-              );
-
-              return menuItems;
-            },
-          ),
-          const SizedBox(width: 8),
-        ],
+                const SizedBox(width: 8),
+              ]
+            : null,
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header + Skills
+          // Header
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
+              children: const [
+                Text(
                   'Find your next job',
                   style: TextStyle(
                     fontSize: 28,
@@ -344,110 +359,114 @@ class _JobListingPageState extends State<JobListingPage>
                     color: Colors.black87,
                   ),
                 ),
-                const SizedBox(height: 6),
-                const Text(
+                SizedBox(height: 6),
+                Text(
                   'A curated list of job openings for you',
                   style: TextStyle(fontSize: 16, color: Colors.black54),
                 ),
-                const SizedBox(height: 16),
-                if (_skills.isNotEmpty)
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 4,
-                    children: _skills
-                        .map(
-                          (skill) => Chip(
-                            label: Text(skill),
-                            onDeleted: () => _removeSkill(skill),
-                            deleteIcon: const Icon(Icons.close),
-                            backgroundColor: const Color(0xFFB8E0C8),
-                            labelStyle: const TextStyle(color: Colors.black87),
-                          ),
-                        )
-                        .toList(),
-                  ),
+                SizedBox(height: 16),
               ],
             ),
           ),
-          // Search bar + icon + search type selector
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _searchController,
-                    autofocus: _isSearching,
-                    decoration: InputDecoration(
-                      hintText: _searchType == SearchType.keyword
-                          ? 'Search by keyword...'
-                          : 'Add a skill...',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
+
+          // Logged-in UI
+          if (isLoggedIn) ...[
+            if (_skills.isNotEmpty)
+              Wrap(
+                spacing: 8,
+                runSpacing: 4,
+                children: _skills
+                    .map(
+                      (skill) => Chip(
+                        label: Text(skill),
+                        onDeleted: () => _removeSkill(skill),
+                        deleteIcon: const Icon(Icons.close),
+                        backgroundColor: const Color(0xFFB8E0C8),
+                        labelStyle: const TextStyle(color: Colors.black87),
                       ),
-                      filled: true,
-                      fillColor: Colors.white,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 0,
+                    )
+                    .toList(),
+              ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _searchController,
+                      autofocus: _isSearching,
+                      decoration: InputDecoration(
+                        hintText: _searchType == SearchType.keyword
+                            ? 'Search by keyword...'
+                            : 'Add a skill...',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        filled: true,
+                        fillColor: Colors.white,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 0,
+                        ),
                       ),
+                      onSubmitted: _onSearchSubmitted,
                     ),
-                    onSubmitted: _onSearchSubmitted,
                   ),
-                ),
-                const SizedBox(width: 8),
-                IconButton(
-                  icon: Icon(_isSearching ? Icons.close : Icons.search),
-                  onPressed: () => _onSearchSubmitted(_searchController.text),
-                ),
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.grey.shade300),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    icon: Icon(_isSearching ? Icons.close : Icons.search),
+                    onPressed: () => _onSearchSubmitted(_searchController.text),
                   ),
-                  child: DropdownButton<SearchType>(
-                    value: _searchType,
-                    underline: const SizedBox(),
-                    items: const [
-                      DropdownMenuItem(
-                        value: SearchType.keyword,
-                        child: Text('Keyword'),
-                      ),
-                      DropdownMenuItem(
-                        value: SearchType.skill,
-                        child: Text('Skill'),
-                      ),
-                    ],
-                    onChanged: (value) {
-                      if (value != null) {
-                        setState(() {
-                          _searchType = value;
-                          _searchController.clear();
-                        });
-                      }
-                    },
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey.shade300),
+                    ),
+                    child: DropdownButton<SearchType>(
+                      value: _searchType,
+                      underline: const SizedBox(),
+                      items: const [
+                        DropdownMenuItem(
+                          value: SearchType.keyword,
+                          child: Text('Keyword'),
+                        ),
+                        DropdownMenuItem(
+                          value: SearchType.skill,
+                          child: Text('Skill'),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() {
+                            _searchType = value;
+                            _searchController.clear();
+                          });
+                        }
+                      },
+                    ),
                   ),
-                ),
+                ],
+              ),
+            ),
+            const Divider(height: 1, color: Colors.grey),
+            TabBar(
+              controller: _tabController,
+              labelColor: const Color(0xFF1F4529),
+              unselectedLabelColor: Colors.grey,
+              indicatorColor: const Color(0xFF1F4529),
+              tabs: const [
+                Tab(text: 'Trending'),
+                Tab(text: 'For You'),
+                Tab(text: 'All'),
               ],
             ),
-          ),
-          const Divider(height: 1, color: Colors.grey),
-          // Tabs
-          TabBar(
-            controller: _tabController,
-            labelColor: const Color(0xFF1F4529),
-            unselectedLabelColor: Colors.grey,
-            indicatorColor: const Color(0xFF1F4529),
-            tabs: const [
-              Tab(text: 'Trending'),
-              Tab(text: 'For You'),
-              Tab(text: 'All'),
-            ],
-          ),
+          ],
+
+          // Job list
           Expanded(
             child: MultiBlocListener(
               listeners: [
