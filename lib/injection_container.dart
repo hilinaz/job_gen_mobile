@@ -2,6 +2,13 @@ import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
 import 'package:http/http.dart' as http;
 import 'package:internet_connection_checker/internet_connection_checker.dart';
+import 'package:job_gen_mobile/features/chatbot/data/datasources/chat_remote_datasource.dart';
+import 'package:job_gen_mobile/features/chatbot/data/repositories/chat_repository_impl.dart';
+import 'package:job_gen_mobile/features/chatbot/domain/repositories/chat_repository.dart';
+import 'package:job_gen_mobile/features/chatbot/domain/usecases/delete_session.dart';
+import 'package:job_gen_mobile/features/chatbot/domain/usecases/get_session_history.dart';
+import 'package:job_gen_mobile/features/chatbot/domain/usecases/get_user_sessions.dart';
+import 'package:job_gen_mobile/features/chatbot/domain/usecases/send_message.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // Core
